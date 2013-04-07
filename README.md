@@ -1,0 +1,165 @@
+# Bramus\Router
+
+A lightweight and simple object oriented PHP Router.
+Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
+
+
+## Features
+
+- Dynamic route patterns
+- `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods
+- Before middlewares
+- Custom 404 handling
+- Finish callback
+- Works fine in subfolders
+
+
+## Prerequisites/Requirements
+
+- PHP 5.3 or greater
+- [URL Rewriting](https://gist.github.com/bramus/5332525)
+
+
+## Installation
+
+Installation is possible using Composer
+
+	{
+		"require": {
+			"bramus/router": "dev-master"
+		}
+	}
+
+
+## Usage
+
+Create an instance of `\Bramus\Router\Router`, define some routes onto it, and run it.
+
+	// Create router instance
+	$router = new \Bramus\Router\Router();
+
+	// Define routes
+	...
+
+	// Run it!
+	$router->run();
+
+
+### Routing
+
+Hook routes using `$router->match(method(s), pattern, function)`:
+
+	$router->match('GET|POST', 'pattern', function() { … });
+
+`Bramus\Router` supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods. Pass in a single method, or multiple methods separated by `|`.
+
+Shorthands for single request methods are provided:
+
+	$router->get('pattern', function() { … });
+	$router->post('pattern', function() { … });
+	$router->put('pattern', function() { … });
+	$router->delete('pattern', function() { … });
+	$router->options('pattern', function() { … });
+
+Note: Routes must be hooked before `$router->run();` is being called.
+
+
+### Route Patterns
+
+Route patterns, basically URIs, can be static or dynamic.
+
+Allowed dynamic parts are:
+- `\d+` = One or more digits (0-9)
+- `\w+` = One or more word characters (a-z 0-9 _)
+- `.*` = Any character (including `/`), zero or more
+
+The dynamic parts are converted to route variables and passed into the handling function. Examples
+
+	$router->get('/movies/\d+', function($movieId) {
+		echo 'Movie #' . $movieId . ' detail';
+	});
+
+	$router->get('/movies/\d+/photos/\d+', function($movieId, $photoId) {
+		echo 'Movie #' . $movieId . ', photo #' . $photoId);
+	});
+
+Only the first route matched will be handled. When no matching route is found, an `'HTTP/1.1 404 Not Found'` status code will be returned.
+
+The leading `/` is not mandatory, but attests good coding style.
+
+### Custom 404
+
+Override the default 404 handler using `$router->set404(function);`
+
+	$router->set404(function() {
+		header('HTTP/1.1 404 Not Found');
+		// ... do something special here
+	});
+
+The 404 will be executed when no route pattern was matched to the current URL.
+
+
+### Middlewares
+
+`Bramus\Router` supports before middlewares, which are executed before the a route handling function is executed.
+
+Like route handling functions, you hook a before middleware to one or more methods and a specific route pattern.
+
+	$router->before('GET|POST', '/admin/.*', function() {
+		if (!isset($_SESSION['user'])) {
+			header('location: /auth/login');
+			exit();
+		}
+	});
+
+Unlike route handling functions, more than one before middleware is execute when more than one route match is found.
+
+### Run Callback
+
+Run one (1) middleware function after a route was handled. Just pass it along the `$router->run()` function.
+
+	$router->run(function() { … });
+
+If the handling function has `exit()`ed the run callback won't be run.
+
+## Integration with other libraries
+
+Integrate other libraries with `Bramus\Router` by making good use of the `use` keyword to pass dependencies into the handling function.
+
+	$tpl = new \Acme\Template\Template;
+
+	$router->get('/', function() use ($tpl) {
+		$tpl->load('home.tpl');
+		$tpl->setdata(array(
+			'name' => 'Bramus!'
+		));
+	});
+
+	$router->run(function() use ($tpl) {
+    	$tpl->display();
+	});
+
+
+## A note on working with PUT
+
+There's no such thing as `$_PUT` in PHP. One must fake it:
+
+	$router->put('/movies/\d+', function() {
+
+		// Fake $_PUT
+		$_PUT  = array();
+		parse_str(file_get_contents('php://input'), $_PUT);
+
+		// …
+
+	});
+
+
+## Acknowledgements
+
+`Bramus\Router` is inspired upon [Klein](https://github.com/chriso/klein.php) and [Ham](https://github.com/radiosilence/Ham). Whilst Klein provides lots of features it is not object oriented. Whilst Ham is Object Oriented, it's bad at _separation of concerns_ as it also provides templating within the routing class.
+
+
+## License
+
+`Bramus\Router` is released under the MIT public license. See the enclosed `LICENSE` for details.
