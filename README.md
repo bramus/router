@@ -1,4 +1,4 @@
-# Bramus\Router
+# bramus/router
 
 A lightweight and simple object oriented PHP Router.
 Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
@@ -58,7 +58,7 @@ Hook routes using `$router->match(method(s), pattern, function)`:
 
 	$router->match('GET|POST', 'pattern', function() { … });
 
-`Bramus\Router` supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods. Pass in a single method, or multiple methods separated by `|`.
+`bramus/router` supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` HTTP request methods. Pass in a single request method, or multiple request methods separated by `|`.
 
 Shorthands for single request methods are provided:
 
@@ -108,7 +108,7 @@ The 404 will be executed when no route pattern was matched to the current URL.
 
 ### Middlewares
 
-`Bramus\Router` supports before middlewares, which are executed before the a route handling function is executed.
+`bramus/router` supports before middlewares, which are executed before the a route handling function is executed.
 
 Like route handling functions, you hook a before middleware to one or more methods and a specific route pattern.
 
@@ -131,9 +131,9 @@ If the handling function has `exit()`ed the run callback won't be run.
 
 ## Integration with other libraries
 
-Integrate other libraries with `Bramus\Router` by making good use of the `use` keyword to pass dependencies into the handling function.
+Integrate other libraries with `bramus/router` by making good use of the `use` keyword to pass dependencies into the handling function.
 
-	$tpl = new \Acme\Template\Template;
+	$tpl = new \Acme\Template\Template();
 
 	$router->get('/', function() use ($tpl) {
 		$tpl->load('home.tpl');
@@ -164,9 +164,9 @@ There's no such thing as `$_PUT` in PHP. One must fake it:
 
 ## Acknowledgements
 
-`Bramus\Router` is inspired upon [Klein](https://github.com/chriso/klein.php) and [Ham](https://github.com/radiosilence/Ham). Whilst Klein provides lots of features it is not object oriented. Whilst Ham is Object Oriented, it's bad at _separation of concerns_ as it also provides templating within the routing class.
+`bramus/router` is inspired upon [Klein](https://github.com/chriso/klein.php) and [Ham](https://github.com/radiosilence/Ham). Whilst Klein provides lots of features it is not object oriented. Whilst Ham is Object Oriented, it's bad at _separation of concerns_ as it also provides templating within the routing class.
 
 
 ## License
 
-`Bramus\Router` is released under the MIT public license. See the enclosed `LICENSE` for details.
+`bramus/router` is released under the MIT public license. See the enclosed `LICENSE` for details.
