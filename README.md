@@ -31,6 +31,13 @@ Installation is possible using Composer
 	}
 
 
+## Demo
+
+A demo is included in the `demo` subfolder. Serve it using your favorite web server, or using PHP 5.4's built-in server by executing `php -S localhost:8080` on the shell. A `.htaccess` for use with Apache is included.
+
+Be sure to run `composer install` before trying to run the demo.
+
+
 ## Usage
 
 Create an instance of `\Bramus\Router\Router`, define some routes onto it, and run it.
