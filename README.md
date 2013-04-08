@@ -8,9 +8,9 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 
 - Dynamic route patterns
 - `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods
-- Before middlewares
+- Before Route Middlewares
 - Custom 404 handling
-- Finish callback
+- Finish callback (After Router Middleware)
 - Works fine in subfolders
 
 
@@ -108,9 +108,9 @@ The 404 will be executed when no route pattern was matched to the current URL.
 
 ### Middlewares
 
-`bramus/router` supports before middlewares, which are executed before the a route handling function is executed.
+`bramus/router` supports _before route middlewares_, which are executed before the route handling is processed.
 
-Like route handling functions, you hook a before middleware to one or more methods and a specific route pattern.
+Like route handling functions, you hook a before route middleware to a combination of one or more HTTP request methods and a specific route pattern.
 
 	$router->before('GET|POST', '/admin/.*', function() {
 		if (!isset($_SESSION['user'])) {
@@ -119,19 +119,19 @@ Like route handling functions, you hook a before middleware to one or more metho
 		}
 	});
 
-Unlike route handling functions, more than one before middleware is execute when more than one route match is found.
+Unlike route handling functions, more than one before route middleware is executed when more than one route match is found.
 
-### Run Callback
+### Run Callback / After Router Middleware
 
-Run one (1) middleware function after a route was handled. Just pass it along the `$router->run()` function.
+Run one (1) middleware function after the routing was processed. Just pass it along the `$router->run()` function. The run callback is route independent.
 
 	$router->run(function() { … });
 
-If the handling function has `exit()`ed the run callback won't be run.
+Note: If the route handling function has `exit()`ed the run callback won't be run.
 
 ## Integration with other libraries
 
-Integrate other libraries with `bramus/router` by making good use of the `use` keyword to pass dependencies into the handling function.
+Integrate other libraries with `bramus/router` by making good use of the `use` keyword to pass dependencies into the handling functions.
 
 	$tpl = new \Acme\Template\Template();
 
