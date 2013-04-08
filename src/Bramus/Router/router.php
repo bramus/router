@@ -198,14 +198,14 @@ class Router {
 		$urlvars = array();
 
 		// Loop all routes
-		foreach ($patterns as $listKey => $listUri) {
+		foreach ($patterns as $idx => $pattern) {
 
 			// we have a match!
-			if (preg_match("#^$listUri$#", $uri)) {
+			if (preg_match("#^$pattern$#", $uri)) {
 
 				// Split the request URL and the route URL
 				$requestUri = explode('/', $uri);
-				$routeUri = explode('/', $listUri);
+				$routeUri = explode('/', $pattern);
 
 				// Extract the dynamic parts from the route
 				foreach ($routeUri as $key => $value) {
@@ -216,7 +216,7 @@ class Router {
 				}
 
 				// call the handling function with the urlvars
-				call_user_func_array($handlers[$_SERVER['REQUEST_METHOD']][$listKey], $urlvars);
+				call_user_func_array($handlers[$_SERVER['REQUEST_METHOD']][$idx], $urlvars);
 
 				// yay!
 				$numHandled++;
