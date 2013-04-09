@@ -6,8 +6,9 @@
 	    return false;
 	}
 
-	// Include the Composer autoloader
-	require_once __DIR__ . '/vendor/autoload.php';
+	// Include the Router class
+	// @note: it's recommended to just use the composer autoloader when working with other packages too
+	require_once __DIR__ . '/../src/Bramus/Router/router.php';
 
 	// Create a Router
 	$router = new \Bramus\Router\Router();
@@ -18,14 +19,23 @@
 		echo '404, route not found!';
 	});
 
-	// Homepage route
+	// Static route: / (homepage)
 	$router->get('/', function() {
-		echo 'Ohai! Surf to <code>/hello/name</code> to get your mojo on.';
+		echo '<h1>bramus/router</h1><p>Try these routes:<p><ul><li>/hello/<em>name</em></li><li>/blog</li><li>/blog/<em>year</em></li><li>/blog/<em>year</em>/<em>month</em></li><li>/blog/<em>year</em>/<em>month</em>/<em>day</em></li></ul>';
 	});
 
-	// Hello route
-	$router->get('/hello/\w+', function($name) {
-		echo 'Hello ' . htmlentities($name);
+	// Dynamic route: /hello/name
+	$router->get('/hello/(\w+)', function($name) {
+		echo 'Hello ' . $name;
+	});
+
+	// Dynamic route with (successive) optional subpatterns: /blog(/year(/month(/day(/slug))))
+	$router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
+		if (!$year) { echo 'Blog overview'; return; }
+		if (!$month) { echo 'Blog year overview (' . $year . ')'; return; }
+		if (!$day) { echo 'Blog month overview (' . $year . '-' . $month . ')'; return; }
+		if (!$slug) { echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')'; return; }
+		echo 'Blogpost ' . htmlentities($slug) . ' detail (' . $year . '-' . $month . '-' . $day . ')';
 	});
 
 	// Thunderbirds are go!
