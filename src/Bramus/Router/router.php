@@ -201,22 +201,16 @@ class Router {
 		foreach ($patterns as $idx => $pattern) {
 
 			// we have a match!
-			if (preg_match("#^$pattern$#", $uri)) {
+			if (preg_match_all("#^$pattern$#", $uri, $matches, PREG_SET_ORDER)) {
 
-				// Split the request URL and the route URL
-				$requestUri = explode('/', $uri);
-				$routeUri = explode('/', $pattern);
+				// Extract the matched URL parameters (and only the parameters)
+				$params = array_map(function($match) {
+					$var = explode('/', $match);
+					return isset($var[1]) ? $var[1] : null;
+				}, array_slice($matches[0], 1));
 
-				// Extract the dynamic parts from the route
-				foreach ($routeUri as $key => $value) {
-					if (in_array($value, array('.*', '\d+','\w+'))) {
-						$urlvars[] = $requestUri[$key];
-					}
-
-				}
-
-				// call the handling function with the urlvars
-				call_user_func_array($handlers[$_SERVER['REQUEST_METHOD']][$idx], $urlvars);
+				// call the handling function with the URL parameters
+				call_user_func_array($handlers[$_SERVER['REQUEST_METHOD']][$idx], $params);
 
 				// yay!
 				$numHandled++;
