@@ -93,6 +93,7 @@ Commonly used subpatterns within Dynamic Route Patterns are:
 - `\w+` = One or more word characters (a-z 0-9 _)
 - `[a-z0-9_-]+` = One or more word characters (a-z 0-9 _) and the dash (-)
 - `.*` = Any character (including `/`), zero or more
+- `[^/]+` = Any character but `/`, one or more
 
 Note: The [PHP PCRE Cheat Sheet](https://www.cs.washington.edu/education/courses/190m/12sp/cheat-sheets/php-regex-cheat-sheet.pdf) might come in handy.
 
