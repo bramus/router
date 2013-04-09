@@ -205,8 +205,8 @@ class Router {
 
 				// Extract the matched URL parameters (and only the parameters)
 				$params = array_map(function($match) {
-					$var = explode('/', $match);
-					return isset($var[1]) ? $var[1] : null;
+					$var = explode('/', trim($match, '/'));
+					return isset($var[0]) ? $var[0] : null;
 				}, array_slice($matches[0], 1));
 
 				// call the handling function with the URL parameters
