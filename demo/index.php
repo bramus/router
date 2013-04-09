@@ -26,7 +26,7 @@
 
 	// Dynamic route: /hello/name
 	$router->get('/hello/(\w+)', function($name) {
-		echo 'Hello ' . $name;
+		echo 'Hello ' . htmlentities($name);
 	});
 
 	// Dynamic route with (successive) optional subpatterns: /blog(/year(/month(/day(/slug))))
