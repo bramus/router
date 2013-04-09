@@ -178,7 +178,7 @@ Unlike route handling functions, more than one before route middleware is execut
 
 ### Before Router Middlewares
 
-Before route middlewares are route specific. Using a general route pattern (viz. _all URLs_), they can become __Before Router Middlewares__ _(in other projects sometimes referred to as __before app middlewares__)_ which are always executed, no matter what the requested URL is.
+Before route middlewares are route specific. Using a general route pattern (viz. _all URLs_), they can become __Before Router Middlewares__ _(in other projects sometimes referred to as before app middlewares)_ which are always executed, no matter what the requested URL is.
 
 	$router->before('GET', '/.*', function() {
 		// ... this will always be executed
@@ -187,7 +187,7 @@ Before route middlewares are route specific. Using a general route pattern (viz.
 
 ### After Router Middleware / Run Callback
 
-Run one (1) middleware function, name the __After Router Middleware__ _(in other projects sometimes referred to as __after app middlewares__)_ after the routing was processed. Just pass it along the `$router->run()` function. The run callback is route independent.
+Run one (1) middleware function, name the __After Router Middleware__ _(in other projects sometimes referred to as after app middlewares)_ after the routing was processed. Just pass it along the `$router->run()` function. The run callback is route independent.
 
 	$router->run(function() { … });
 
