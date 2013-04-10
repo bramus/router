@@ -98,7 +98,7 @@ Commonly used subpatterns within Dynamic Route Patterns are:
 
 Note: The [PHP PCRE Cheat Sheet](https://www.cs.washington.edu/education/courses/190m/12sp/cheat-sheets/php-regex-cheat-sheet.pdf) might come in handy.
 
-The __subpatterns__ defined in Dynamic Route Patterns are converted to parameters which are passed into the route handling function. Prerequisite is that these subpatterns need to be defined as __parenthesized subpatterns__, which means that they should be wrapped between brackets:
+The __subpatterns__ defined in Dynamic Route Patterns are converted to parameters which are passed into the route handling function. Prerequisite is that these subpatterns need to be defined as __parenthesized subpatterns__, which means that they should be wrapped between parens:
 
 	// Bad
 	$router->get('/hello/\w+', function($name) {
