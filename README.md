@@ -3,6 +3,7 @@
 A lightweight and simple object oriented PHP Router.
 Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 
+[![Build Status](https://secure.travis-ci.org/bramus/router.png)](http://travis-ci.org/bramus/router)
 
 
 ## Features
