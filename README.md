@@ -232,6 +232,14 @@ There's no such thing as `$_PUT` in PHP. One must fake it:
 
 
 
+## Unit Testing
+
+`bramus/router` ships with unit tests using [PHPUnit](https://github.com/sebastianbergmann/phpunit/).
+
+If PHPUnit is installed globally run `phpunit` to run the tests. If PHPUnit is not installed globally, install it locally throuh composer (by running `composer install --dev`) and run the tests by calling `vendor/bin/phpunit`.
+
+
+
 ## Acknowledgements
 
 `bramus/router` is inspired upon [Klein](https://github.com/chriso/klein.php) and [Ham](https://github.com/radiosilence/Ham). Whilst Klein provides lots of features it is not object oriented. Whilst Ham is Object Oriented, it's bad at _separation of concerns_ as it also provides templating within the routing class.
