@@ -11,27 +11,15 @@ class Router {
 
 
 	/**
-	 * @var array The route patterns
+	 * @var array The route patterns and their handling functions
 	 */
-	private $routePatterns = array();
+	private $routes = array();
 
 
 	/**
-	 * @var array The route handling functions
+	 * @var array The before middleware route patterns and their handling functions
 	 */
-	private $routeHandlers = array();
-
-
-	/**
-	 * @var array The before middleware route patterns
-	 */
-	private $beforePatterns = array();
-
-
-	/**
-	 * @var array The before middleware handling functions
-	 */
-	private $beforeHandlers = array();
+	private $befores = array();
 
 
 	/**
@@ -52,8 +40,10 @@ class Router {
 		$pattern = '/' . trim($pattern, '/');
 
 		foreach (explode('|', $methods) as $method) {
-			$this->beforePatterns[$method][] = $pattern;
-			$this->beforeHandlers[$method][] = $fn;
+			$this->befores[$method][] = array(
+				'pattern' => $pattern,
+				'fn' => $fn
+			);
 		}
 
 	}
@@ -70,8 +60,10 @@ class Router {
 		$pattern = '/' . trim($pattern, '/');
 
 		foreach (explode('|', $methods) as $method) {
-			$this->routePatterns[$method][] = $pattern;
-			$this->routeHandlers[$method][] = $fn;
+			$this->routes[$method][] = array(
+				'pattern' => $pattern,
+				'fn' => $fn
+			);
 		}
 
 	}
@@ -140,13 +132,13 @@ class Router {
 	public function run($callback = null) {
 
 		// Handle all before middlewares
-		if (isset($this->beforePatterns[$_SERVER['REQUEST_METHOD']]))
-			$this->handle($this->beforePatterns[$_SERVER['REQUEST_METHOD']], $this->beforeHandlers);
+		if (isset($this->befores[$_SERVER['REQUEST_METHOD']]))
+			$this->handle($this->befores[$_SERVER['REQUEST_METHOD']]);
 
 		// Handle all routes
 		$numHandled = 0;
-		if (isset($this->routePatterns[$_SERVER['REQUEST_METHOD']]))
-			$numHandled = $this->handle($this->routePatterns[$_SERVER['REQUEST_METHOD']], $this->routeHandlers, true);
+		if (isset($this->routes[$_SERVER['REQUEST_METHOD']]))
+			$numHandled = $this->handle($this->routes[$_SERVER['REQUEST_METHOD']], true);
 
 		// If no route was handled, trigger the 404 (if any)
 		if ($numHandled == 0) {
@@ -171,12 +163,11 @@ class Router {
 
 	/**
 	 * Handle a a set of routes: if a match is found, execute the relating handling function
-	 * @param array $patterns Collection of route patterns
-	 * @param array $handlers Collection of handling functions
+	 * @param array $routes Collection of route patterns and their handling functions
 	 * @param boolean $quitAfterRun Does the handle function need to quit after one route was matched?
 	 * @return int The number of routes handled
 	 */
-	private function handle($patterns, $handlers, $quitAfterRun = false) {
+	private function handle($routes, $quitAfterRun = false) {
 
 		// Counter to keep track of the number of routes we've handled
 		$numHandled = 0;
@@ -188,10 +179,10 @@ class Router {
 		$urlvars = array();
 
 		// Loop all routes
-		foreach ($patterns as $idx => $pattern) {
+		foreach ($routes as $route) {
 
 			// we have a match!
-			if (preg_match_all("#^$pattern$#", $uri, $matches, PREG_SET_ORDER)) {
+			if (preg_match_all('#^' . $route['pattern'] . '$#', $uri, $matches, PREG_SET_ORDER)) {
 
 				// Extract the matched URL parameters (and only the parameters)
 				$params = array_map(function($match) {
@@ -200,7 +191,7 @@ class Router {
 				}, array_slice($matches[0], 1));
 
 				// call the handling function with the URL parameters
-				call_user_func_array($handlers[$_SERVER['REQUEST_METHOD']][$idx], $params);
+				call_user_func_array($route['fn'], $params);
 
 				// yay!
 				$numHandled++;
