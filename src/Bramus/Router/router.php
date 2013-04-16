@@ -182,17 +182,7 @@ class Router {
 		$numHandled = 0;
 
 		// The current page URL
-		$uri = $_SERVER['REQUEST_URI'];
-
-		// Remove rewrite basepath (= allows one to run the router in a subfolder)
-		$basepath = implode('/', array_slice(explode('/', $_SERVER["SCRIPT_NAME"]), 0, -1)) . '/';
-		$uri = substr($uri, strlen($basepath));
-
-		// Don't take query params into account on the URL
-		if (strstr($uri, '?')) $uri = substr($uri, 0, strpos($uri, '?'));
-
-		// Remove trailing slash + enforce a slash at the start
-		$uri = '/' . trim($uri, '/');
+		$uri = $this->getCurrentUri();
 
 		// Variables in the URL
 		$urlvars = array();
@@ -224,6 +214,30 @@ class Router {
 
 		// Return the number of routes handled
 		return $numHandled;
+
+	}
+
+
+	/**
+	 * Define the current relative URI
+	 * @return string
+	 */
+	private function getCurrentUri() {
+
+		// Current Request URI
+		$uri = $_SERVER['REQUEST_URI'];
+
+		// Remove rewrite basepath (= allows one to run the router in a subfolder)
+		$basepath = implode('/', array_slice(explode('/', $_SERVER["SCRIPT_NAME"]), 0, -1)) . '/';
+		$uri = substr($uri, strlen($basepath));
+
+		// Don't take query params into account on the URL
+		if (strstr($uri, '?')) $uri = substr($uri, 0, strpos($uri, '?'));
+
+		// Remove trailing slash + enforce a slash at the start
+		$uri = '/' . trim($uri, '/');
+
+		return $uri;
 
 	}
 

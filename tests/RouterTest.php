@@ -20,6 +20,30 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$this->assertInstanceOf('\Bramus\Router\Router', new \Bramus\Router\Router());
 	}
 
+	public function testUri() {
+
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->match('GET', '/about', function() {
+			echo 'about';
+		});
+
+		// Fake some data
+		$_SERVER['SCRIPT_NAME'] = '/sub/folder/index.php';
+		$_SERVER['REQUEST_URI'] = '/sub/folder/about/whatever';
+
+		$method = new ReflectionMethod(
+			'\Bramus\Router\Router', 'getCurrentUri'
+		);
+
+		$method->setAccessible(TRUE);
+
+		$this->assertEquals(
+			'/about/whatever', $method->invoke(new \Bramus\Router\Router())
+		);
+
+	}
+
 	public function testStaticRoute() {
 
 		// Create Router
