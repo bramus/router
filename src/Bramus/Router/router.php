@@ -149,7 +149,7 @@ class Router {
 			$numHandled = $this->handle($this->routePatterns[$_SERVER['REQUEST_METHOD']], $this->routeHandlers, true);
 
 		// If no route was handled, trigger the 404 (if any)
-		if (!$numHandled) {
+		if ($numHandled == 0) {
 			if ($this->notFound && is_callable($this->notFound)) call_user_func($this->notFound);
 			else header('HTTP/1.1 404 Not Found');
 		}
