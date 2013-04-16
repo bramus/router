@@ -135,7 +135,7 @@ class Router {
 	/**
 	 * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a mactch was found
 	 *
-	 * @param object $callback Function to be executed when no matching route was found
+	 * @param object $callback Function to be executed after a matching route was handled (= after router middleware)
 	 */
 	public function run($callback = null) {
 
@@ -153,7 +153,7 @@ class Router {
 			if ($this->notFound && is_callable($this->notFound)) call_user_func($this->notFound);
 			else header('HTTP/1.1 404 Not Found');
 		}
-		// If a route was handled, perform the callback
+		// If a route was handled, perform the finish callback (if any)
 		else {
 			if ($callback) $callback();
 		}
