@@ -1,3 +1,3 @@
 <?php
 
-	require 'src/Bramus/Router/router.php';
+	require 'src/Bramus/Router/Router.php';
