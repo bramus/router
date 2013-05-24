@@ -219,7 +219,7 @@ class Router {
 		$uri = $_SERVER['REQUEST_URI'];
 
 		// Remove rewrite basepath (= allows one to run the router in a subfolder)
-		$basepath = implode('/', array_slice(explode('/', $_SERVER["SCRIPT_NAME"]), 0, -1)) . '/';
+		$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
 		$uri = substr($uri, strlen($basepath));
 
 		// Don't take query params into account on the URL
