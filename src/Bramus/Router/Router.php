@@ -137,8 +137,9 @@ class Router {
 
 		// Handle all routes
 		$numHandled = 0;
+		$result = null;
 		if (isset($this->routes[$_SERVER['REQUEST_METHOD']]))
-			$numHandled = $this->handle($this->routes[$_SERVER['REQUEST_METHOD']], true);
+			list($numHandled, $result) = $this->handle($this->routes[$_SERVER['REQUEST_METHOD']], true);
 
 		// If no route was handled, trigger the 404 (if any)
 		if ($numHandled == 0) {
@@ -149,6 +150,8 @@ class Router {
 		else {
 			if ($callback) $callback();
 		}
+		
+		return $result;
 	}
 
 
@@ -165,7 +168,7 @@ class Router {
 	 * Handle a a set of routes: if a match is found, execute the relating handling function
 	 * @param array $routes Collection of route patterns and their handling functions
 	 * @param boolean $quitAfterRun Does the handle function need to quit after one route was matched?
-	 * @return int The number of routes handled
+	 * @return mixed An associate array holding the number of routes handled as well as the result returned by the handler
 	 */
 	private function handle($routes, $quitAfterRun = false) {
 
@@ -191,20 +194,21 @@ class Router {
 				}, array_slice($matches[0], 1));
 
 				// call the handling function with the URL parameters
-				call_user_func_array($route['fn'], $params);
+				$response = call_user_func_array($route['fn'], $params);
 
 				// yay!
 				$numHandled++;
 
 				// If we need to quit, then quit
-				if ($quitAfterRun) break;
+				// Return response, only and only if it was asked to quit on first match
+				if ($quitAfterRun) return array($numHandled, $response);
 
 			}
 
 		}
 
-		// Return the number of routes handled
-		return $numHandled;
+		// Return the number of routes handled with no response
+		return array($numHandled, false);
 
 	}
 
