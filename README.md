@@ -70,7 +70,7 @@ Hook __routes__ (a combination of one or more HTTP methods and a pattern) using 
 
 `bramus/router` supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` HTTP request methods. Pass in a single request method, or multiple request methods separated by `|`.
 
-When a route matches, the attached __route handling function__ will be executed. Only the first route matched will be handled. When no matching route is found, an `'HTTP/1.1 404 Not Found'` status code will be returned.
+When a route matches, the attached __route handling function__ will be executed. The route handling function must be a [callable](http://php.net/manual/en/language.types.callable.php). Only the first route matched will be handled. When no matching route is found, an `'HTTP/1.1 404 Not Found'` status code will be returned.
 
 Shorthands for single request methods are provided:
 
