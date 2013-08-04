@@ -323,6 +323,36 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
 	}
 
+	public function testSubrouteMouting() {
+
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->mount('/movies', function() use ($router) {
+			$router->get('/', function() {
+				echo 'overview';
+			});
+			$router->get('/(\d+)', function($id) {
+				echo htmlentities($id);
+			});
+		});
+
+		// Test the /movies route
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/movies';
+		$router->run();
+		$this->assertEquals('overview', ob_get_contents());
+
+		// Test the /hello/bramus route
+		ob_clean();
+		$_SERVER['REQUEST_URI'] = '/movies/1';
+		$router->run();
+		$this->assertEquals('1', ob_get_contents());
+
+		// Cleanup
+		ob_end_clean();
+
+	}
+
 }
 
 // EOF

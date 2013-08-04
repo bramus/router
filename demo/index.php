@@ -26,7 +26,12 @@
 
 	// Static route: / (homepage)
 	$router->get('/', function() {
-		echo '<h1>bramus/router</h1><p>Try these routes:<p><ul><li>/hello/<em>name</em></li><li>/blog</li><li>/blog/<em>year</em></li><li>/blog/<em>year</em>/<em>month</em></li><li>/blog/<em>year</em>/<em>month</em>/<em>day</em></li></ul>';
+		echo '<h1>bramus/router</h1><p>Try these routes:<p><ul><li>/hello/<em>name</em></li><li>/blog</li><li>/blog/<em>year</em></li><li>/blog/<em>year</em>/<em>month</em></li><li>/blog/<em>year</em>/<em>month</em>/<em>day</em></li><li>/movies</li><li>/movies/<em>id</em></li></ul>';
+	});
+
+	// Static route: /hello
+	$router->get('/hello', function() {
+		echo '<h1>bramus/router</h1><p>Visit <code>/hello/<em>name</em></code> to get your Hello World mojo on!</p>';
 	});
 
 	// Dynamic route: /hello/name
@@ -41,6 +46,21 @@
 		if (!$day) { echo 'Blog month overview (' . $year . '-' . $month . ')'; return; }
 		if (!$slug) { echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')'; return; }
 		echo 'Blogpost ' . htmlentities($slug) . ' detail (' . $year . '-' . $month . '-' . $day . ')';
+	});
+
+	// Subrouting
+	$router->mount('/movies', function() use ($router) {
+
+		// will result in '/movies/'
+		$router->get('/', function() {
+			echo 'movies overview';
+		});
+
+		// will result in '/movies/id'
+		$router->get('/(\d+)', function($id) {
+			echo 'movie id ' . htmlentities($id);
+		});
+
 	});
 
 	// Thunderbirds are go!

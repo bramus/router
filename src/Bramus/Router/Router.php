@@ -29,6 +29,12 @@ class Router {
 
 
 	/**
+	 * @var string Current baseroute, used for (sub)route mounting
+	 */
+	private $baseroute = '';
+
+
+	/**
 	 * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
 	 *
 	 * @param string $methods Allowed methods, | delimited
@@ -37,7 +43,8 @@ class Router {
 	 */
 	public function before($methods, $pattern, $fn) {
 
-		$pattern = '/' . trim($pattern, '/');
+		$pattern = $this->baseroute . '/' . trim($pattern, '/');
+		$pattern = $this->baseroute ? rtrim($pattern, '/') : $pattern;
 
 		foreach (explode('|', $methods) as $method) {
 			$this->befores[$method][] = array(
@@ -57,7 +64,8 @@ class Router {
 	 */
 	public function match($methods, $pattern, $fn) {
 
-		$pattern = '/' . trim($pattern, '/');
+		$pattern = $this->baseroute . '/' . trim($pattern, '/');
+		$pattern = $this->baseroute ? rtrim($pattern, '/') : $pattern;
 
 		foreach (explode('|', $methods) as $method) {
 			$this->routes[$method][] = array(
@@ -121,6 +129,29 @@ class Router {
 	 */
 	public function options($pattern, $fn) {
 		$this->match('OPTIONS', $pattern, $fn);
+	}
+
+
+	/**
+	 * Mounts a collection of callables onto a base route
+	 *
+	 * @param string $baseroute The route subpattern to mount the callables on
+	 * @param callable $fn The callabled to be called
+	 */
+	public function mount($baseroute, $fn) {
+
+		// Track current baseroute
+		$curBaseroute = $this->baseroute;
+
+		// Build new baseroute string
+		$this->baseroute .= $baseroute;
+
+		// Call the callable
+		call_user_func($fn);
+
+		// Restore original baseroute
+		$this->baseroute = $curBaseroute;
+
 	}
 
 

@@ -11,7 +11,8 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 - Static Route Patterns
 - Dynamic Route Patterns
 - Optional Route Subpatterns
-- `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods
+- Supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods
+- Subrouting
 - Custom 404 handling
 - Before Route Middlewares
 - Before Router Middlewares
@@ -148,6 +149,27 @@ To make things complete use [quantifiers](http://www.php.net/manual/en/regexp.re
 	$router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
 		// ...
 	}
+
+
+### Subrouting / Mounting Routes
+
+Use `$router->mount($baseroute, $fn)` to mount a collection of routes onto a subroute pattern. The subroute pattern is prefixed onto all following routes defined in the scope. e.g. Mounting a callback `$fn` onto `/movies` will prefix `/movies` onto all following routes.
+
+	$router->mount('/movies', function() use ($router) {
+
+		// will result in '/movies/'
+		$router->get('/', function() {
+			echo 'movies overview';
+		});
+
+		// will result in '/movies/id'
+		$router->get('/(\d+)', function($id) {
+			echo 'movie id ' . htmlentities($id);
+		});
+
+	});
+
+Nesting of subroutes is possible, just define a second `$router->mount()` in the callable that's already contained within a preceding `$router->mount()`.
 
 
 ### Custom 404
