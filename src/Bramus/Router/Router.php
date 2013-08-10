@@ -35,6 +35,12 @@ class Router {
 
 
 	/**
+	 * @var string The Request Method that needs to be handled
+	 */
+	private $method = '';
+
+
+	/**
 	 * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
 	 *
 	 * @param string $methods Allowed methods, | delimited
@@ -162,14 +168,24 @@ class Router {
 	 */
 	public function run($callback = null) {
 
+		// Define which method we need to handle
+		$this->method = $_SERVER['REQUEST_METHOD'];
+
+		// If it's a HEAD request handle all GET requests and prevent any output, as per HTTP Specification
+		// @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
+		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+			ob_start();
+			$this->method = 'GET';
+		}
+
 		// Handle all before middlewares
-		if (isset($this->befores[$_SERVER['REQUEST_METHOD']]))
-			$this->handle($this->befores[$_SERVER['REQUEST_METHOD']]);
+		if (isset($this->befores[$this->method]))
+			$this->handle($this->befores[$this->method]);
 
 		// Handle all routes
 		$numHandled = 0;
-		if (isset($this->routes[$_SERVER['REQUEST_METHOD']]))
-			$numHandled = $this->handle($this->routes[$_SERVER['REQUEST_METHOD']], true);
+		if (isset($this->routes[$this->method]))
+			$numHandled = $this->handle($this->routes[$this->method], true);
 
 		// If no route was handled, trigger the 404 (if any)
 		if ($numHandled == 0) {
@@ -180,6 +196,10 @@ class Router {
 		else {
 			if ($callback) $callback();
 		}
+
+		// If it was a HEAD request, clean up after ourselves by emptying the output buffer
+		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') ob_end_clean();
+
 	}
 
 

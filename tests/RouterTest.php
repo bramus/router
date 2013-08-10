@@ -122,6 +122,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$router->run();
 		$this->assertEquals('options', ob_get_contents());
 
+		// Test HEAD
+		ob_clean();
+		$_SERVER['REQUEST_METHOD'] = 'HEAD';
+		$router->run();
+		$this->assertEquals('', ob_get_contents());
+
 		// Cleanup
 		ob_end_clean();
 

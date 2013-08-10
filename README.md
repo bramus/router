@@ -11,7 +11,7 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 - Static Route Patterns
 - Dynamic Route Patterns
 - Optional Route Subpatterns
-- Supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` request methods
+- Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS` and `HEAD` request methods
 - Subrouting
 - Custom 404 handling
 - Before Route Middlewares
@@ -253,6 +253,10 @@ There's no such thing as `$_PUT` in PHP. One must fake it:
 
 	});
 
+
+## A note on making HEAD requests
+
+When making `HEAD` requests all output will be buffered to prevent any content trickling into the response body, as defined in [RFC2616 (Hypertext Transfer Protocol -- HTTP/1.1)](http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4): _The HEAD method is identical to GET except that the server MUST NOT return a message-body in the response. The metainformation contained in the HTTP headers in response to a HEAD request SHOULD be identical to the information sent in response to a GET request._
 
 
 ## Unit Testing & Code Coverage
