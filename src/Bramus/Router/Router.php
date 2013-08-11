@@ -106,6 +106,17 @@ class Router {
 
 
 	/**
+	 * Shorthand for a route accessed using PATCH
+	 *
+	 * @param string $pattern A route pattern such as /about/system
+	 * @param object $fn The handling function to be executed
+	 */
+	public function patch($pattern, $fn) {
+		$this->match('PATCH', $pattern, $fn);
+	}
+
+
+	/**
 	 * Shorthand for a route accessed using DELETE
 	 *
 	 * @param string $pattern A route pattern such as /about/system

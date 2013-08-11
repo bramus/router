@@ -11,7 +11,7 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 - Static Route Patterns
 - Dynamic Route Patterns
 - Optional Route Subpatterns
-- Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS` and `HEAD` request methods
+- Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` and `HEAD` request methods
 - Subrouting
 - Custom 404 handling
 - Before Route Middlewares
@@ -80,6 +80,7 @@ Shorthands for single request methods are provided:
 	$router->put('pattern', function() { … });
 	$router->delete('pattern', function() { … });
 	$router->options('pattern', function() { … });
+	$router->patch('pattern', function() { … });
 
 Note: Routes must be hooked before `$router->run();` is being called.
 

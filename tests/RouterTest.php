@@ -89,6 +89,7 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$router->get('/', function() { echo 'get'; });
 		$router->post('/', function() { echo 'post'; });
 		$router->put('/', function() { echo 'put'; });
+		$router->patch('/', function() { echo 'patch'; });
 		$router->delete('/', function() { echo 'delete'; });
 		$router->options('/', function() { echo 'options'; });
 
@@ -109,6 +110,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$_SERVER['REQUEST_METHOD'] = 'PUT';
 		$router->run();
 		$this->assertEquals('put', ob_get_contents());
+
+		// Test PATCH
+		ob_clean();
+		$_SERVER['REQUEST_METHOD'] = 'PATCH';
+		$router->run();
+		$this->assertEquals('patch', ob_get_contents());
 
 		// Test DELETE
 		ob_clean();
