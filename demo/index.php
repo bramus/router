@@ -51,14 +51,24 @@
 	// Subrouting
 	$router->mount('/movies', function() use ($router) {
 
-		// will result in '/movies/'
+		// will result in '/movies'
 		$router->get('/', function() {
 			echo 'movies overview';
+		});
+
+		// will result in '/movies'
+		$router->post('/', function() {
+			echo 'add movie';
 		});
 
 		// will result in '/movies/id'
 		$router->get('/(\d+)', function($id) {
 			echo 'movie id ' . htmlentities($id);
+		});
+
+		// will result in '/movies/id'
+		$router->put('/(\d+)', function($id) {
+			echo 'Update movie id ' . htmlentities($id);
 		});
 
 	});
