@@ -173,6 +173,56 @@ class Router {
 
 
 	/**
+	 * Get all request headers
+	 * @return array The request headers
+	 */
+	public function getRequestHeaders() {
+
+		// getallheaders available, use that
+		if (function_exists('getallheaders')) return getallheaders();
+
+		// getallheaders not available: manually extract 'm
+		$headers = array();
+		foreach ($_SERVER as $name => $value) {
+			if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
+				$headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+			}
+		}
+		return $headers;
+
+	}
+
+
+	/**
+	 * Get the request method used, taking overrides into account
+	 * @return string The Request method to handle
+	 */
+	public function getRequestMethod() {
+
+		// Take the method as found in $_SERVER
+		$method = $_SERVER['REQUEST_METHOD'];
+
+		// If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
+		// @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
+		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+			ob_start();
+			$method = 'GET';
+		}
+
+		// If it's a POST request, check for a method override header
+		else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$headers = $this->getRequestHeaders();
+			if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
+				$method = $headers['X-HTTP-Method-Override'];
+			}
+		}
+
+		return $method;
+
+	}
+
+
+	/**
 	 * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a mactch was found
 	 *
 	 * @param object $callback Function to be executed after a matching route was handled (= after router middleware)
@@ -180,14 +230,7 @@ class Router {
 	public function run($callback = null) {
 
 		// Define which method we need to handle
-		$this->method = $_SERVER['REQUEST_METHOD'];
-
-		// If it's a HEAD request handle all GET requests and prevent any output, as per HTTP Specification
-		// @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
-			ob_start();
-			$this->method = 'GET';
-		}
+		$this->method = $this->getRequestMethod();
 
 		// Handle all before middlewares
 		if (isset($this->befores[$this->method]))
@@ -208,7 +251,7 @@ class Router {
 			if ($callback) $callback();
 		}
 
-		// If it was a HEAD request, clean up after ourselves by emptying the output buffer
+		// If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
 		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') ob_end_clean();
 
 	}

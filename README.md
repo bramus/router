@@ -12,6 +12,7 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 - Dynamic Route Patterns
 - Optional Route Subpatterns
 - Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` and `HEAD` request methods
+- Supports `X-HTTP-Method-Override` header
 - Subrouting
 - Custom 404 handling
 - Before Route Middlewares
@@ -218,6 +219,10 @@ Run one (1) middleware function, name the __After Router Middleware__ _(in other
 
 Note: If the route handling function has `exit()`ed the run callback won't be run.
 
+
+### Overriding the request method
+
+Use `X-HTTP-Method-Override` to override the HTTP Request Method. Only works when the original Request Method is `POST`. Allowed values for `X-HTTP-Method-Override` are `PUT`, `DELETE`, or `PATCH`.
 
 
 ## Integration with other libraries

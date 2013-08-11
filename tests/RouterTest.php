@@ -366,6 +366,24 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
 	}
 
+	public function testHttpMethodOverride() {
+
+		// Fake the request method to being POST and override it
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] = 'PUT';
+
+		$method = new ReflectionMethod(
+			'\Bramus\Router\Router', 'getRequestMethod'
+		);
+
+		$method->setAccessible(TRUE);
+
+		$this->assertEquals(
+			'PUT', $method->invoke(new \Bramus\Router\Router())
+		);
+
+	}
+
 }
 
 // EOF
