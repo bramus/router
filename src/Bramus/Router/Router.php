@@ -320,12 +320,9 @@ class Router {
 	 */
 	private function getCurrentUri() {
 
-		// Current Request URI
-		$uri = $_SERVER['REQUEST_URI'];
-
-		// Remove rewrite basepath (= allows one to run the router in a subfolder)
+		// Current Request URI, remove rewrite basepath (= allows one to run the router in a subfolder)
 		$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
-		$uri = substr($uri, strlen($basepath));
+		$uri = substr($_SERVER['REQUEST_URI'], strlen($basepath));
 
 		// Don't take query params into account on the URL
 		if (strstr($uri, '?')) $uri = substr($uri, 0, strpos($uri, '?'));
