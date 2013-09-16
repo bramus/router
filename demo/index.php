@@ -15,7 +15,7 @@
 
 	// Custom 404 Handler
 	$router->set404(function() {
-		header('HTTP/1.1 404 Not Found');
+		header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
 		echo '404, route not found!';
 	});
 
