@@ -10,6 +10,9 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		// Default request method to GET
 		$_SERVER['REQUEST_METHOD'] = 'GET';
 
+		// Default SERVER_PROTOCOL method to HTTP/1.1
+		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+
 	}
 
 	protected function tearDown() {
