@@ -244,7 +244,7 @@ class Router {
 		// If no route was handled, trigger the 404 (if any)
 		if ($numHandled == 0) {
 			if ($this->notFound && is_callable($this->notFound)) call_user_func($this->notFound);
-			else header('HTTP/1.1 404 Not Found');
+			else header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
 		}
 		// If a route was handled, perform the finish callback (if any)
 		else {
