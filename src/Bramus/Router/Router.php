@@ -289,10 +289,18 @@ class Router {
 			// we have a match!
 			if (preg_match_all('#^' . $route['pattern'] . '$#', $uri, $matches, PREG_SET_ORDER)) {
 
+				// Rework matches to only contain the matches, not the orig string
+				$matches = array_slice($matches[0], 1);
+
 				// Extract the matched URL parameters (and only the parameters)
-				$params = array_map(function($match) {
-					return trim($match, '/');
-				}, array_slice($matches[0], 1));
+				$params = array_map(function($match, $index) use ($matches) {
+					if ($index == sizeof($matches) - 1) { // if it's the last param, return it all (see issue #8)
+						return trim($match, '/');
+					} else {
+						$var = explode('/', trim($match, '/'));
+						return isset($var[0]) ? $var[0] : null;
+					}
+				}, $matches, array_keys($matches));
 
 				// call the handling function with the URL parameters
 				call_user_func_array($route['fn'], $params);
