@@ -206,6 +206,53 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
 	}
 
+	public function testDynamicRouteWithOptionalNestedSubpatterns() {
+
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
+			if (!$year) { echo 'Blog overview'; return; }
+			if (!$month) { echo 'Blog year overview (' . $year . ')'; return; }
+			if (!$day) { echo 'Blog month overview (' . $year . '-' . $month . ')'; return; }
+			if (!$slug) { echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')'; return; }
+			echo 'Blogpost ' . htmlentities($slug) . ' detail (' . $year . '-' . $month . '-' . $day . ')';
+		});
+
+		// Test the /blog route
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/blog';
+		$router->run();
+		$this->assertEquals('Blog overview', ob_get_contents());
+
+		// Test the /blog/year route
+		ob_clean();
+		$_SERVER['REQUEST_URI'] = '/blog/1983';
+		$router->run();
+		$this->assertEquals('Blog year overview (1983)', ob_get_contents());
+
+		// Test the /blog/year/month route
+		ob_clean();
+		$_SERVER['REQUEST_URI'] = '/blog/1983/12';
+		$router->run();
+		$this->assertEquals('Blog month overview (1983-12)', ob_get_contents());
+
+		// Test the /blog/year/month/day route
+		ob_clean();
+		$_SERVER['REQUEST_URI'] = '/blog/1983/12/26';
+		$router->run();
+		$this->assertEquals('Blog day overview (1983-12-26)', ob_get_contents());
+
+		// Test the /blog/year/month/day/slug route
+		ob_clean();
+		$_SERVER['REQUEST_URI'] = '/blog/1983/12/26/bramus';
+		$router->run();
+		$this->assertEquals('Blogpost bramus detail (1983-12-26)', ob_get_contents());
+
+		// Cleanup
+		ob_end_clean();
+
+	}
+
 	public function testDynamicRouteWithWildcard() {
 
 		// Create Router
