@@ -206,6 +206,44 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
 	}
 
+	public function testDynamicRouteWithWildcard() {
+
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->get('(.*)', function($name) {
+			echo 'Hello ' . $name;
+		});
+
+		// Test the /hello/bramus route
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/hello/bramus';
+		$router->run();
+		$this->assertEquals('Hello hello/bramus', ob_get_contents());
+
+		// Cleanup
+		ob_end_clean();
+
+	}
+
+	public function testDynamicRouteWithPartialWildcard() {
+
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->get('/hello/(.*)', function($name) {
+			echo 'Hello ' . $name;
+		});
+
+		// Test the /hello/bramus route
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
+		$router->run();
+		$this->assertEquals('Hello bramus/sumarb', ob_get_contents());
+
+		// Cleanup
+		ob_end_clean();
+
+	}
+
 	/**
      * @runInSeparateProcess
      */
