@@ -294,7 +294,13 @@ class Router {
 
 				// Extract the matched URL parameters (and only the parameters)
 				$params = array_map(function($match, $index) use ($matches) {
-					if ($index == sizeof($matches) - 1) { // if it's the last param, return it all (see issue #8)
+					$nested = false;
+					if(sizeof($matches) > $index  + 1) {
+						if(strpos($matches[$index], $matches[$index + 1]) !== false) {
+							$nested = true;
+						}
+					}
+					if ($index == sizeof($matches) - 1 || $nested == false) { // if it's the last param, return it all (see issue #8)
 						return trim($match, '/');
 					} else {
 						$var = explode('/', trim($match, '/'));

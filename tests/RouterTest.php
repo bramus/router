@@ -206,6 +206,24 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
 	}
 
+	public function testDynamicRouteWithMultipleSubpatterns() {
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->get('/(.*)/page([0-9]+)', function($place, $page) {
+			echo 'Hello ' . $place . ' page : ' . $page;
+		});
+		
+		// Test the /hello/bramus/page3 route
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/hello/bramus/page3';
+		$router->run();
+		$this->assertEquals('Hello hello/bramus page : 3', ob_get_contents());
+		
+		// Cleanup
+		ob_end_clean();
+		
+	}
+
 	public function testDynamicRouteWithOptionalNestedSubpatterns() {
 
 		// Create Router
