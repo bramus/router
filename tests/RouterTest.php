@@ -212,16 +212,16 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$router->get('/(.*)/page([0-9]+)', function($place, $page) {
 			echo 'Hello ' . $place . ' page : ' . $page;
 		});
-		
+
 		// Test the /hello/bramus/page3 route
 		ob_start();
 		$_SERVER['REQUEST_URI'] = '/hello/bramus/page3';
 		$router->run();
 		$this->assertEquals('Hello hello/bramus page : 3', ob_get_contents());
-		
+
 		// Cleanup
 		ob_end_clean();
-		
+
 	}
 
 	public function testDynamicRouteWithOptionalNestedSubpatterns() {
@@ -265,6 +265,31 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$_SERVER['REQUEST_URI'] = '/blog/1983/12/26/bramus';
 		$router->run();
 		$this->assertEquals('Blogpost bramus detail (1983-12-26)', ob_get_contents());
+
+		// Cleanup
+		ob_end_clean();
+
+	}
+
+	public function testDynamicRouteWithNestedOptionalSubpatterns() {
+
+		// Create Router
+		$router = new \Bramus\Router\Router();
+		$router->get('/hello(/\w+(/\w+)?)?', function($name1 = null, $name2 = null) {
+			echo 'Hello ' . (($name1) ? $name1 : 'stranger') . ' ' . (($name2) ? $name2 : 'stranger');
+		});
+
+		// Test the /hello/bramus route
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/hello/bramus';
+		$router->run();
+		$this->assertEquals('Hello bramus stranger', ob_get_contents());
+
+		// Test the /hello/bramus/bramus route
+		ob_clean();
+		$_SERVER['REQUEST_URI'] = '/hello/bramus/bramus';
+		$router->run();
+		$this->assertEquals('Hello bramus bramus', ob_get_contents());
 
 		// Cleanup
 		ob_end_clean();
