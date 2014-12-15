@@ -23,7 +23,7 @@ class Router {
 
 
 	/**
-	 * @var object The function to be executed when no route has been matched
+	 * @var object|callable The function to be executed when no route has been matched
 	 */
 	private $notFound;
 
@@ -45,7 +45,7 @@ class Router {
 	 *
 	 * @param string $methods Allowed methods, | delimited
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function before($methods, $pattern, $fn) {
 
@@ -66,7 +66,7 @@ class Router {
 	 *
 	 * @param string $methods Allowed methods, | delimited
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function match($methods, $pattern, $fn) {
 
@@ -87,7 +87,7 @@ class Router {
 	 * Shorthand for a route accessed using GET
 	 *
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function get($pattern, $fn) {
 		$this->match('GET', $pattern, $fn);
@@ -98,7 +98,7 @@ class Router {
 	 * Shorthand for a route accessed using POST
 	 *
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function post($pattern, $fn) {
 		$this->match('POST', $pattern, $fn);
@@ -109,7 +109,7 @@ class Router {
 	 * Shorthand for a route accessed using PATCH
 	 *
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function patch($pattern, $fn) {
 		$this->match('PATCH', $pattern, $fn);
@@ -120,7 +120,7 @@ class Router {
 	 * Shorthand for a route accessed using DELETE
 	 *
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function delete($pattern, $fn) {
 		$this->match('DELETE', $pattern, $fn);
@@ -131,7 +131,7 @@ class Router {
 	 * Shorthand for a route accessed using PUT
 	 *
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function put($pattern, $fn) {
 		$this->match('PUT', $pattern, $fn);
@@ -142,7 +142,7 @@ class Router {
 	 * Shorthand for a route accessed using OPTIONS
 	 *
 	 * @param string $pattern A route pattern such as /about/system
-	 * @param object $fn The handling function to be executed
+	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function options($pattern, $fn) {
 		$this->match('OPTIONS', $pattern, $fn);
@@ -225,7 +225,7 @@ class Router {
 	/**
 	 * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a mactch was found
 	 *
-	 * @param object $callback Function to be executed after a matching route was handled (= after router middleware)
+	 * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
 	 */
 	public function run($callback = null) {
 
@@ -259,7 +259,7 @@ class Router {
 
 	/**
 	 * Set the 404 handling function
-	 * @param object $fn The function to be executed
+	 * @param object|callable $fn The function to be executed
 	 */
 	public function set404($fn) {
 		$this->notFound = $fn;
@@ -280,9 +280,6 @@ class Router {
 		// The current page URL
 		$uri = $this->getCurrentUri();
 
-		// Variables in the URL
-		$urlvars = array();
-
 		// Loop all routes
 		foreach ($routes as $route) {
 
@@ -300,7 +297,7 @@ class Router {
 						return trim(substr($match[0][0], 0, $matches[$index+1][0][1] - $match[0][1]), '/');
 					}
 
-					// We have no following paramete: return the whole lot
+					// We have no following parameters: return the whole lot
 					else {
 						return (isset($match[0][0]) ? trim($match[0][0], '/') : null);
 					}
