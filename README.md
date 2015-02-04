@@ -1,9 +1,9 @@
 # bramus/router
 
+[![Build Status](https://img.shields.io/travis/bramus/router.svg?style=flat-square)](http://travis-ci.org/bramus/router) ![Source](http://img.shields.io/badge/source-bramus/router-blue.svg?style=flat-square) ![Version](https://img.shields.io/packagist/v/bramus/router.svg?style=flat-square) ![Downloads](https://img.shields.io/packagist/dt/bramus/router.svg?style=flat-square) ![License](https://img.shields.io/packagist/l/bramus/router.svg?style=flat-square)
+
 A lightweight and simple object oriented PHP Router.
 Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
-
-[![Build Status](https://img.shields.io/travis/bramus/router.svg?style=flat-square)](http://travis-ci.org/bramus/router) ![Source](http://img.shields.io/badge/source-bramus/monolog--colored--line--formatter-blue.svg?style=flat-square) ![Version](https://img.shields.io/packagist/v/bramus/router.svg?style=flat-square) ![Downloads](https://img.shields.io/packagist/dt/bramus/router.svg?style=flat-square) ![License](https://img.shields.io/packagist/l/bramus/router.svg?style=flat-square)
 
 
 ## Features
