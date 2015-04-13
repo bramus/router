@@ -49,24 +49,28 @@ A demo is included in the `demo` subfolder. Serve it using your favorite web ser
 
 Create an instance of `\Bramus\Router\Router`, define some routes onto it, and run it.
 
-	// Require composer autoloader
-	require __DIR__ . '/vendor/autoload.php';
+```php
+// Require composer autoloader
+require __DIR__ . '/vendor/autoload.php';
 
-	// Create Router instance
-	$router = new \Bramus\Router\Router();
+// Create Router instance
+$router = new \Bramus\Router\Router();
 
-	// Define routes
-	...
+// Define routes
+// ...
 
-	// Run it!
-	$router->run();
+// Run it!
+$router->run();
+```
 
 
 ### Routing
 
 Hook __routes__ (a combination of one or more HTTP methods and a pattern) using `$router->match(method(s), pattern, function)`:
 
-	$router->match('GET|POST', 'pattern', function() { … });
+```php
+$router->match('GET|POST', 'pattern', function() { … });
+```
 
 `bramus/router` supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` HTTP request methods. Pass in a single request method, or multiple request methods separated by `|`.
 
@@ -74,12 +78,14 @@ When a route matches, the attached __route handling function__ will be executed.
 
 Shorthands for single request methods are provided:
 
-	$router->get('pattern', function() { … });
-	$router->post('pattern', function() { … });
-	$router->put('pattern', function() { … });
-	$router->delete('pattern', function() { … });
-	$router->options('pattern', function() { … });
-	$router->patch('pattern', function() { … });
+```php
+$router->get('pattern', function() { /* ... */ });
+$router->post('pattern', function() { /* ... */ });
+$router->put('pattern', function() { /* ... */ });
+$router->delete('pattern', function() { /* ... */ });
+$router->options('pattern', function() { /* ... */ });
+$router->patch('pattern', function() { /* ... */ });
+```
 
 Note: Routes must be hooked before `$router->run();` is being called.
 
@@ -101,36 +107,45 @@ Note: The [PHP PCRE Cheat Sheet](https://www.cs.washington.edu/education/courses
 
 The __subpatterns__ defined in Dynamic Route Patterns are converted to parameters which are passed into the route handling function. Prerequisite is that these subpatterns need to be defined as __parenthesized subpatterns__, which means that they should be wrapped between parens:
 
-	// Bad
-	$router->get('/hello/\w+', function($name) {
-		echo 'Hello ' . htmlentities($name);
-	});
+```php
+// Bad
+$router->get('/hello/\w+', function($name) {
+	echo 'Hello ' . htmlentities($name);
+});
 
-	// Good
-	$router->get('/hello/(\w+)', function($name) {
-		echo 'Hello ' . htmlentities($name);
-	});
+// Good
+$router->get('/hello/(\w+)', function($name) {
+	echo 'Hello ' . htmlentities($name);
+});
+```
 
 Note: The leading `/` at the very beginning of a route pattern is not mandatory, but is recommended.
 
 When multiple subpatterns are defined, they resulting __route handling parameters__ are passed into the route handling function in the order they are defined in:
 
-	$router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
-		echo 'Movie #' . $movieId . ', photo #' . $photoId);
-	});
+```php
+$router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
+	echo 'Movie #' . $movieId . ', photo #' . $photoId);
+});
+```
 
 
 ### Optional Route Subpatterns
 
 Route subpatterns can be made optional by making the subpatterns optional by adding a `?` after them. Think of blog URLs in the form of `/blog(/year)(/month)(/day)(/slug)`:
 
-	$router->get('/blog(/\d+)?(/\d+)?(/\d+)?(/[a-z0-9_-]+)?', function($year = null, $month = null, $day = null, $slug = null) {
+```php
+$router->get(
+	'/blog(/\d+)?(/\d+)?(/\d+)?(/[a-z0-9_-]+)?',
+	function($year = null, $month = null, $day = null, $slug = null) {
 		if (!$year) { echo 'Blog overview'; return; }
 		if (!$month) { echo 'Blog year overview'; return; }
 		if (!$day) { echo 'Blog month overview'; return; }
 		if (!$slug) { echo 'Blog day overview'; return; }
 		echo 'Blogpost ' . htmlentities($slug) . ' detail';
-	});
+	}
+);
+```
 
 The code snippet above responds to the URLs `/blog`, `/blog/year`, `/blog/year/month`, `/blog/year/month/day`, and `/blog/year/month/day/slug`.
 
@@ -138,36 +153,42 @@ Note: With optional parameters it is important that the leading `/` of the subpa
 
 The code snipped above unfortunately also responds to URLs like `/blog/foo` and states that the overview needs to be shown - which is incorrect. Optional subpatterns can be made successive by extending the parenthesized subpatterns so that they contain the other optional subpatterns: The pattern should resemble `/blog(/year(/month(/day(/slug))))` instead of the previous `/blog(/year)(/month)(/day)(/slug)`:
 
-	$router->get('/blog(/\d+(/\d+(/\d+(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
-		// ...
-	}
+```php
+$router->get('/blog(/\d+(/\d+(/\d+(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
+	// ...
+}
+```
 
 Note: It is highly recommended to __always__ define successive optional parameters.
 
 To make things complete use [quantifiers](http://www.php.net/manual/en/regexp.reference.repetition.php) to require the correct amount of numbers in the URL:
 
-	$router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
-		// ...
-	}
+```php
+$router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
+	// ...
+}
+```
 
 
 ### Subrouting / Mounting Routes
 
 Use `$router->mount($baseroute, $fn)` to mount a collection of routes onto a subroute pattern. The subroute pattern is prefixed onto all following routes defined in the scope. e.g. Mounting a callback `$fn` onto `/movies` will prefix `/movies` onto all following routes.
 
-	$router->mount('/movies', function() use ($router) {
+```php
+$router->mount('/movies', function() use ($router) {
 
-		// will result in '/movies/'
-		$router->get('/', function() {
-			echo 'movies overview';
-		});
-
-		// will result in '/movies/id'
-		$router->get('/(\d+)', function($id) {
-			echo 'movie id ' . htmlentities($id);
-		});
-
+	// will result in '/movies/'
+	$router->get('/', function() {
+		echo 'movies overview';
 	});
+
+	// will result in '/movies/id'
+	$router->get('/(\d+)', function($id) {
+		echo 'movie id ' . htmlentities($id);
+	});
+
+});
+```
 
 Nesting of subroutes is possible, just define a second `$router->mount()` in the callable that's already contained within a preceding `$router->mount()`.
 
@@ -176,10 +197,12 @@ Nesting of subroutes is possible, just define a second `$router->mount()` in the
 
 Override the default 404 handler using `$router->set404(function);`
 
-	$router->set404(function() {
-		header('HTTP/1.1 404 Not Found');
-		// ... do something special here
-	});
+```php
+$router->set404(function() {
+	header('HTTP/1.1 404 Not Found');
+	// ... do something special here
+});
+```
 
 The 404 will be executed when no route pattern was matched to the current URL.
 
@@ -190,12 +213,14 @@ The 404 will be executed when no route pattern was matched to the current URL.
 
 Like route handling functions, you hook a handling function to a combination of one or more HTTP request methods and a specific route pattern.
 
-	$router->before('GET|POST', '/admin/.*', function() {
-		if (!isset($_SESSION['user'])) {
-			header('location: /auth/login');
-			exit();
-		}
-	});
+```php
+$router->before('GET|POST', '/admin/.*', function() {
+	if (!isset($_SESSION['user'])) {
+		header('location: /auth/login');
+		exit();
+	}
+});
+```
 
 Unlike route handling functions, more than one before route middleware is executed when more than one route match is found.
 
@@ -204,16 +229,20 @@ Unlike route handling functions, more than one before route middleware is execut
 
 Before route middlewares are route specific. Using a general route pattern (viz. _all URLs_), they can become __Before Router Middlewares__ _(in other projects sometimes referred to as before app middlewares)_ which are always executed, no matter what the requested URL is.
 
-	$router->before('GET', '/.*', function() {
-		// ... this will always be executed
-	});
+```php
+$router->before('GET', '/.*', function() {
+	// ... this will always be executed
+});
+```
 
 
 ### After Router Middleware / Run Callback
 
 Run one (1) middleware function, name the __After Router Middleware__ _(in other projects sometimes referred to as after app middlewares)_ after the routing was processed. Just pass it along the `$router->run()` function. The run callback is route independent.
 
-	$router->run(function() { … });
+```php
+$router->run(function() { … });
+```
 
 Note: If the route handling function has `exit()`ed the run callback won't be run.
 
@@ -227,18 +256,20 @@ Use `X-HTTP-Method-Override` to override the HTTP Request Method. Only works whe
 
 Integrate other libraries with `bramus/router` by making good use of the `use` keyword to pass dependencies into the handling functions.
 
-	$tpl = new \Acme\Template\Template();
+```php
+$tpl = new \Acme\Template\Template();
 
-	$router->get('/', function() use ($tpl) {
-		$tpl->load('home.tpl');
-		$tpl->setdata(array(
-			'name' => 'Bramus!'
-		));
-	});
+$router->get('/', function() use ($tpl) {
+	$tpl->load('home.tpl');
+	$tpl->setdata(array(
+		'name' => 'Bramus!'
+	));
+});
 
-	$router->run(function() use ($tpl) {
-    	$tpl->display();
-	});
+$router->run(function() use ($tpl) {
+	$tpl->display();
+});
+```
 
 Given this structure it is still possible to manipulate the output from within the After Router Middleware
 
@@ -247,15 +278,17 @@ Given this structure it is still possible to manipulate the output from within t
 
 There's no such thing as `$_PUT` in PHP. One must fake it:
 
-	$router->put('/movies/(\d+)', function($id) {
+```php
+$router->put('/movies/(\d+)', function($id) {
 
-		// Fake $_PUT
-		$_PUT  = array();
-		parse_str(file_get_contents('php://input'), $_PUT);
+	// Fake $_PUT
+	$_PUT  = array();
+	parse_str(file_get_contents('php://input'), $_PUT);
 
-		// ...
+	// ...
 
-	});
+});
+```
 
 
 ## A note on making HEAD requests
