@@ -327,7 +327,7 @@ class Router {
 	 * Define the current relative URI
 	 * @return string
 	 */
-	private function getCurrentUri() {
+	protected function getCurrentUri() {
 
 		// Get the current Request URI and remove rewrite basepath from it (= allows one to run the router in a subfolder)
 		$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
