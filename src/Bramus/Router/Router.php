@@ -82,6 +82,17 @@ class Router {
 
 	}
 
+	/*
+	 * Shorthand for a route accessed using any method
+	 * 
+	 * @param string $pattern A route pattern such as /about/system
+	 * @param object|callable $fn The handling function to be executed
+	 */
+	public function all($pattern, $fn) {
+
+		$this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $fn);
+
+	}
 
 	/**
 	 * Shorthand for a route accessed using GET
