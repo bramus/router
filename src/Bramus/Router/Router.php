@@ -25,7 +25,7 @@ class Router {
 	/**
 	 * @var object|callable The function to be executed when no route has been matched
 	 */
-	private $notFound;
+	protected $notFound;
 
 
 	/**
