@@ -89,9 +89,7 @@ class Router {
 	 * @param object|callable $fn The handling function to be executed
 	 */
 	public function all($pattern, $fn) {
-
 		$this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $fn);
-
 	}
 
 	/**
