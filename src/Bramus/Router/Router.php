@@ -251,7 +251,7 @@ class Router {
 			$numHandled = $this->handle($this->routes[$this->method], true);
 
 		// If no route was handled, trigger the 404 (if any)
-		if ($numHandled == 0 && $trigger404 === true) {
+		if ($numHandled === 0 && $trigger404 === true) {
 			if ($this->notFound && is_callable($this->notFound)) call_user_func($this->notFound);
 			else header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
 		}
@@ -262,6 +262,10 @@ class Router {
 
 		// If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
 		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') ob_end_clean();
+		
+		// Return true if a route was handled, false otherwise
+		if ($numHandled === 0) return false;
+		return true;
 
 	}
 
