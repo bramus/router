@@ -236,7 +236,7 @@ class Router {
 	 *
 	 * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
 	 */
-	public function run($callback = null, $trigger404 = true) {
+	public function run($callback = null) {
 
 		// Define which method we need to handle
 		$this->method = $this->getRequestMethod();
@@ -251,7 +251,7 @@ class Router {
 			$numHandled = $this->handle($this->routes[$this->method], true);
 
 		// If no route was handled, trigger the 404 (if any)
-		if ($numHandled === 0 && $trigger404 === true) {
+		if ($numHandled === 0) {
 			if ($this->notFound && is_callable($this->notFound)) call_user_func($this->notFound);
 			else header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
 		}
