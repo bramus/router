@@ -1,8 +1,10 @@
 <?php
 
-class RouterTest extends PHPUnit_Framework_TestCase {
+class RouterTest extends PHPUnit_Framework_TestCase
+{
 
-    protected function setUp() {
+    protected function setUp()
+    {
 
         // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
         $_SERVER['SCRIPT_NAME'] = '/index.php';
@@ -15,19 +17,22 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    protected function tearDown() {
+    protected function tearDown()
+    {
         // nothing
     }
 
-    public function testInit() {
+    public function testInit()
+    {
         $this->assertInstanceOf('\Bramus\Router\Router', new \Bramus\Router\Router());
     }
 
-    public function testUri() {
+    public function testUri()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->match('GET', '/about', function() {
+        $router->match('GET', '/about', function () {
             echo 'about';
         });
 
@@ -36,22 +41,25 @@ class RouterTest extends PHPUnit_Framework_TestCase {
         $_SERVER['REQUEST_URI'] = '/sub/folder/about/whatever';
 
         $method = new ReflectionMethod(
-            '\Bramus\Router\Router', 'getCurrentUri'
+            '\Bramus\Router\Router',
+            'getCurrentUri'
         );
 
-        $method->setAccessible(TRUE);
+        $method->setAccessible(true);
 
         $this->assertEquals(
-            '/about/whatever', $method->invoke(new \Bramus\Router\Router())
+            '/about/whatever',
+            $method->invoke(new \Bramus\Router\Router())
         );
 
     }
 
-    public function testStaticRoute() {
+    public function testStaticRoute()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->match('GET', '/about', function() {
+        $router->match('GET', '/about', function () {
             echo 'about';
         });
 
@@ -66,11 +74,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testStaticRouteUsingShorthand() {
+    public function testStaticRouteUsingShorthand()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/about', function() {
+        $router->get('/about', function () {
             echo 'about';
         });
 
@@ -85,16 +94,35 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testRequestMethods() {
+    public function testRequestMethods()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/', function() { echo 'get'; });
-        $router->post('/', function() { echo 'post'; });
-        $router->put('/', function() { echo 'put'; });
-        $router->patch('/', function() { echo 'patch'; });
-        $router->delete('/', function() { echo 'delete'; });
-        $router->options('/', function() { echo 'options'; });
+        $router->get('/', function () {
+            echo 'get';
+
+        });
+        $router->post('/', function () {
+            echo 'post';
+
+        });
+        $router->put('/', function () {
+            echo 'put';
+
+        });
+        $router->patch('/', function () {
+            echo 'patch';
+
+        });
+        $router->delete('/', function () {
+            echo 'delete';
+
+        });
+        $router->options('/', function () {
+            echo 'options';
+
+        });
 
         // Test GET
         ob_start();
@@ -143,11 +171,15 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
     
-    public function testShorthandAll() {
+    public function testShorthandAll()
+    {
         
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->all('/', function() { echo 'all'; });
+        $router->all('/', function () {
+            echo 'all';
+
+        });
         
         $_SERVER['REQUEST_URI'] = '/';
         
@@ -198,11 +230,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
         
     }
 
-    public function testDynamicRoute() {
+    public function testDynamicRoute()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/hello/(\w+)', function($name) {
+        $router->get('/hello/(\w+)', function ($name) {
             echo 'Hello ' . $name;
         });
 
@@ -217,11 +250,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithMultiple() {
+    public function testDynamicRouteWithMultiple()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/hello/(\w+)/(\w+)', function($name, $lastname) {
+        $router->get('/hello/(\w+)/(\w+)', function ($name, $lastname) {
             echo 'Hello ' . $name . ' ' . $lastname;
         });
 
@@ -236,11 +270,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithOptionalSubpatterns() {
+    public function testDynamicRouteWithOptionalSubpatterns()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/hello(/\w+)?', function($name = null) {
+        $router->get('/hello(/\w+)?', function ($name = null) {
             echo 'Hello ' . (($name) ? $name : 'stranger');
         });
 
@@ -261,10 +296,11 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithMultipleSubpatterns() {
+    public function testDynamicRouteWithMultipleSubpatterns()
+    {
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/(.*)/page([0-9]+)', function($place, $page) {
+        $router->get('/(.*)/page([0-9]+)', function ($place, $page) {
             echo 'Hello ' . $place . ' page : ' . $page;
         });
 
@@ -279,15 +315,28 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithOptionalNestedSubpatterns() {
+    public function testDynamicRouteWithOptionalNestedSubpatterns()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
-            if (!$year) { echo 'Blog overview'; return; }
-            if (!$month) { echo 'Blog year overview (' . $year . ')'; return; }
-            if (!$day) { echo 'Blog month overview (' . $year . '-' . $month . ')'; return; }
-            if (!$slug) { echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')'; return; }
+        $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function ($year = null, $month = null, $day = null, $slug = null) {
+            if (!$year) {
+                echo 'Blog overview';
+                return;
+            }
+            if (!$month) {
+                echo 'Blog year overview (' . $year . ')';
+                return;
+            }
+            if (!$day) {
+                echo 'Blog month overview (' . $year . '-' . $month . ')';
+                return;
+            }
+            if (!$slug) {
+                echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')';
+                return;
+            }
             echo 'Blogpost ' . htmlentities($slug) . ' detail (' . $year . '-' . $month . '-' . $day . ')';
         });
 
@@ -326,11 +375,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithNestedOptionalSubpatterns() {
+    public function testDynamicRouteWithNestedOptionalSubpatterns()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/hello(/\w+(/\w+)?)?', function($name1 = null, $name2 = null) {
+        $router->get('/hello(/\w+(/\w+)?)?', function ($name1 = null, $name2 = null) {
             echo 'Hello ' . (($name1) ? $name1 : 'stranger') . ' ' . (($name2) ? $name2 : 'stranger');
         });
 
@@ -351,11 +401,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithWildcard() {
+    public function testDynamicRouteWithWildcard()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('(.*)', function($name) {
+        $router->get('(.*)', function ($name) {
             echo 'Hello ' . $name;
         });
 
@@ -370,11 +421,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testDynamicRouteWithPartialWildcard() {
+    public function testDynamicRouteWithPartialWildcard()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/hello/(.*)', function($name) {
+        $router->get('/hello/(.*)', function ($name) {
             echo 'Hello ' . $name;
         });
 
@@ -392,11 +444,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
     /**
      * @runInSeparateProcess
      */
-    public function testDefault404() {
+    public function testDefault404()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/', function() {
+        $router->get('/', function () {
             echo 'home';
         });
 
@@ -412,14 +465,15 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function test404() {
+    public function test404()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/', function() {
+        $router->get('/', function () {
             echo 'home';
         });
-        $router->set404(function() {
+        $router->set404(function () {
             echo 'route not found';
         });
 
@@ -440,17 +494,18 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testBeforeRouteMiddleware() {
+    public function testBeforeRouteMiddleware()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->before('GET', '/about', function() {
+        $router->before('GET', '/about', function () {
             echo 'before ';
         });
-        $router->get('/about', function() {
+        $router->get('/about', function () {
             echo 'about';
         });
-        $router->get('/contact', function() {
+        $router->get('/contact', function () {
             echo 'contact';
         });
 
@@ -471,17 +526,18 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testBeforeRouterMiddleware() {
+    public function testBeforeRouterMiddleware()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->before('GET', '/.*', function() {
+        $router->before('GET', '/.*', function () {
             echo 'before ';
         });
-        $router->get('/about', function() {
+        $router->get('/about', function () {
             echo 'about';
         });
-        $router->get('/contact', function() {
+        $router->get('/contact', function () {
             echo 'contact';
         });
 
@@ -502,18 +558,22 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testAfterRouterMiddleware() {
+    public function testAfterRouterMiddleware()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/', function() {
+        $router->get('/', function () {
             echo 'home';
         });
 
         // Test the / route
         ob_start();
         $_SERVER['REQUEST_URI'] = '/';
-        $router->run(function() { echo 'finished'; });
+        $router->run(function () {
+            echo 'finished';
+
+        });
         $this->assertEquals('homefinished', ob_get_contents());
 
         // Cleanup
@@ -521,11 +581,12 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testSubfolders() {
+    public function testSubfolders()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->get('/', function() {
+        $router->get('/', function () {
             echo 'home';
         });
 
@@ -541,15 +602,16 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testSubrouteMouting() {
+    public function testSubrouteMouting()
+    {
 
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->mount('/movies', function() use ($router) {
-            $router->get('/', function() {
+        $router->mount('/movies', function () use ($router) {
+            $router->get('/', function () {
                 echo 'overview';
             });
-            $router->get('/(\d+)', function($id) {
+            $router->get('/(\d+)', function ($id) {
                 echo htmlentities($id);
             });
         });
@@ -571,24 +633,26 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testHttpMethodOverride() {
+    public function testHttpMethodOverride()
+    {
 
         // Fake the request method to being POST and override it
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] = 'PUT';
 
         $method = new ReflectionMethod(
-            '\Bramus\Router\Router', 'getRequestMethod'
+            '\Bramus\Router\Router',
+            'getRequestMethod'
         );
 
-        $method->setAccessible(TRUE);
+        $method->setAccessible(true);
 
         $this->assertEquals(
-            'PUT', $method->invoke(new \Bramus\Router\Router())
+            'PUT',
+            $method->invoke(new \Bramus\Router\Router())
         );
 
     }
-
 }
 
 // EOF

@@ -110,12 +110,12 @@ The __subpatterns__ defined in Dynamic Route Patterns are converted to parameter
 ```php
 // Bad
 $router->get('/hello/\w+', function($name) {
-	echo 'Hello ' . htmlentities($name);
+    echo 'Hello ' . htmlentities($name);
 });
 
 // Good
 $router->get('/hello/(\w+)', function($name) {
-	echo 'Hello ' . htmlentities($name);
+    echo 'Hello ' . htmlentities($name);
 });
 ```
 
@@ -125,7 +125,7 @@ When multiple subpatterns are defined, they resulting __route handling parameter
 
 ```php
 $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
-	echo 'Movie #' . $movieId . ', photo #' . $photoId);
+    echo 'Movie #' . $movieId . ', photo #' . $photoId);
 });
 ```
 
@@ -136,14 +136,14 @@ Route subpatterns can be made optional by making the subpatterns optional by add
 
 ```php
 $router->get(
-	'/blog(/\d+)?(/\d+)?(/\d+)?(/[a-z0-9_-]+)?',
-	function($year = null, $month = null, $day = null, $slug = null) {
-		if (!$year) { echo 'Blog overview'; return; }
-		if (!$month) { echo 'Blog year overview'; return; }
-		if (!$day) { echo 'Blog month overview'; return; }
-		if (!$slug) { echo 'Blog day overview'; return; }
-		echo 'Blogpost ' . htmlentities($slug) . ' detail';
-	}
+    '/blog(/\d+)?(/\d+)?(/\d+)?(/[a-z0-9_-]+)?',
+    function($year = null, $month = null, $day = null, $slug = null) {
+        if (!$year) { echo 'Blog overview'; return; }
+        if (!$month) { echo 'Blog year overview'; return; }
+        if (!$day) { echo 'Blog month overview'; return; }
+        if (!$slug) { echo 'Blog day overview'; return; }
+        echo 'Blogpost ' . htmlentities($slug) . ' detail';
+    }
 );
 ```
 
@@ -155,7 +155,7 @@ The code snipped above unfortunately also responds to URLs like `/blog/foo` and 
 
 ```php
 $router->get('/blog(/\d+(/\d+(/\d+(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
-	// ...
+    // ...
 }
 ```
 
@@ -165,7 +165,7 @@ To make things complete use [quantifiers](http://www.php.net/manual/en/regexp.re
 
 ```php
 $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
-	// ...
+    // ...
 }
 ```
 
@@ -177,15 +177,15 @@ Use `$router->mount($baseroute, $fn)` to mount a collection of routes onto a sub
 ```php
 $router->mount('/movies', function() use ($router) {
 
-	// will result in '/movies/'
-	$router->get('/', function() {
-		echo 'movies overview';
-	});
+    // will result in '/movies/'
+    $router->get('/', function() {
+        echo 'movies overview';
+    });
 
-	// will result in '/movies/id'
-	$router->get('/(\d+)', function($id) {
-		echo 'movie id ' . htmlentities($id);
-	});
+    // will result in '/movies/id'
+    $router->get('/(\d+)', function($id) {
+        echo 'movie id ' . htmlentities($id);
+    });
 
 });
 ```
@@ -199,8 +199,8 @@ Override the default 404 handler using `$router->set404(function);`
 
 ```php
 $router->set404(function() {
-	header('HTTP/1.1 404 Not Found');
-	// ... do something special here
+    header('HTTP/1.1 404 Not Found');
+    // ... do something special here
 });
 ```
 
@@ -215,10 +215,10 @@ Like route handling functions, you hook a handling function to a combination of 
 
 ```php
 $router->before('GET|POST', '/admin/.*', function() {
-	if (!isset($_SESSION['user'])) {
-		header('location: /auth/login');
-		exit();
-	}
+    if (!isset($_SESSION['user'])) {
+        header('location: /auth/login');
+        exit();
+    }
 });
 ```
 
@@ -231,7 +231,7 @@ Before route middlewares are route specific. Using a general route pattern (viz.
 
 ```php
 $router->before('GET', '/.*', function() {
-	// ... this will always be executed
+    // ... this will always be executed
 });
 ```
 
@@ -260,14 +260,14 @@ Integrate other libraries with `bramus/router` by making good use of the `use` k
 $tpl = new \Acme\Template\Template();
 
 $router->get('/', function() use ($tpl) {
-	$tpl->load('home.tpl');
-	$tpl->setdata(array(
-		'name' => 'Bramus!'
-	));
+    $tpl->load('home.tpl');
+    $tpl->setdata(array(
+        'name' => 'Bramus!'
+    ));
 });
 
 $router->run(function() use ($tpl) {
-	$tpl->display();
+    $tpl->display();
 });
 ```
 
@@ -281,11 +281,11 @@ There's no such thing as `$_PUT` in PHP. One must fake it:
 ```php
 $router->put('/movies/(\d+)', function($id) {
 
-	// Fake $_PUT
-	$_PUT  = array();
-	parse_str(file_get_contents('php://input'), $_PUT);
+    // Fake $_PUT
+    $_PUT  = array();
+    parse_str(file_get_contents('php://input'), $_PUT);
 
-	// ...
+    // ...
 
 });
 ```
