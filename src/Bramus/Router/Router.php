@@ -25,7 +25,7 @@ class Router {
 	/**
 	 * @var object|callable The function to be executed when no route has been matched
 	 */
-	private $notFound;
+	protected $notFound;
 
 
 	/**
@@ -82,6 +82,15 @@ class Router {
 
 	}
 
+	/*
+	 * Shorthand for a route accessed using any method
+	 * 
+	 * @param string $pattern A route pattern such as /about/system
+	 * @param object|callable $fn The handling function to be executed
+	 */
+	public function all($pattern, $fn) {
+		$this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn);
+	}
 
 	/**
 	 * Shorthand for a route accessed using GET
@@ -242,7 +251,7 @@ class Router {
 			$numHandled = $this->handle($this->routes[$this->method], true);
 
 		// If no route was handled, trigger the 404 (if any)
-		if ($numHandled == 0) {
+		if ($numHandled === 0) {
 			if ($this->notFound && is_callable($this->notFound)) call_user_func($this->notFound);
 			else header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
 		}
@@ -253,6 +262,10 @@ class Router {
 
 		// If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
 		if ($_SERVER['REQUEST_METHOD'] == 'HEAD') ob_end_clean();
+		
+		// Return true if a route was handled, false otherwise
+		if ($numHandled === 0) return false;
+		return true;
 
 	}
 
