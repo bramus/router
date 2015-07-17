@@ -245,9 +245,10 @@ class Router
 
 
     /**
-     * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a mactch was found
+     * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a match was found
      *
      * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
+     * @return bool
      */
     public function run($callback = null)
     {
