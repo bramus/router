@@ -341,7 +341,23 @@ class Router
                 }, $matches, array_keys($matches));
 
                 // call the handling function with the URL parameters
-                call_user_func_array($route['fn'], $params);
+                if (is_callable($route['fn'])) {
+                    call_user_func_array($route['fn'], $params);
+                }
+                else {
+                    $segments = explode('@', $route['fn']);
+                    
+                    $controller = new $segments[0];
+                    
+                    if (method_exists($controller, $segments[1])) {
+                        call_user_func_array(array($controller, $segments[1]), $matches);
+                    }
+                    else {
+                        throw new \InvalidArgumentException(sprintf(
+                            'Method not found, %s given', $segments[1]
+                        ));
+                    }
+                }
 
                 // yay!
                 $numHandled++;
