@@ -9,37 +9,30 @@ namespace Bramus\Router;
 
 class Router
 {
-
-
     /**
      * @var array The route patterns and their handling functions
      */
     private $routes = array();
-
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
     private $befores = array();
 
-
     /**
      * @var object|callable The function to be executed when no route has been matched
      */
     protected $notFound;
-
 
     /**
      * @var string Current baseroute, used for (sub)route mounting
      */
     private $baseroute = '';
 
-
     /**
      * @var string The Request Method that needs to be handled
      */
     private $method = '';
-
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
@@ -50,7 +43,6 @@ class Router
      */
     public function before($methods, $pattern, $fn)
     {
-
         $pattern = $this->baseroute . '/' . trim($pattern, '/');
         $pattern = $this->baseroute ? rtrim($pattern, '/') : $pattern;
 
@@ -60,7 +52,6 @@ class Router
                 'fn' => $fn
             );
         }
-
     }
 
     /**
@@ -72,7 +63,6 @@ class Router
      */
     public function match($methods, $pattern, $fn)
     {
-
         $pattern = $this->baseroute . '/' . trim($pattern, '/');
         $pattern = $this->baseroute ? rtrim($pattern, '/') : $pattern;
 
@@ -82,12 +72,11 @@ class Router
                 'fn' => $fn
             );
         }
-
     }
 
     /*
      * Shorthand for a route accessed using any method
-     * 
+     *
      * @param string $pattern A route pattern such as /about/system
      * @param object|callable $fn The handling function to be executed
      */
@@ -107,7 +96,6 @@ class Router
         $this->match('GET', $pattern, $fn);
     }
 
-
     /**
      * Shorthand for a route accessed using POST
      *
@@ -118,7 +106,6 @@ class Router
     {
         $this->match('POST', $pattern, $fn);
     }
-
 
     /**
      * Shorthand for a route accessed using PATCH
@@ -131,7 +118,6 @@ class Router
         $this->match('PATCH', $pattern, $fn);
     }
 
-
     /**
      * Shorthand for a route accessed using DELETE
      *
@@ -142,7 +128,6 @@ class Router
     {
         $this->match('DELETE', $pattern, $fn);
     }
-
 
     /**
      * Shorthand for a route accessed using PUT
@@ -155,7 +140,6 @@ class Router
         $this->match('PUT', $pattern, $fn);
     }
 
-
     /**
      * Shorthand for a route accessed using OPTIONS
      *
@@ -167,7 +151,6 @@ class Router
         $this->match('OPTIONS', $pattern, $fn);
     }
 
-
     /**
      * Mounts a collection of callables onto a base route
      *
@@ -176,7 +159,6 @@ class Router
      */
     public function mount($baseroute, $fn)
     {
-
         // Track current baseroute
         $curBaseroute = $this->baseroute;
 
@@ -188,9 +170,7 @@ class Router
 
         // Restore original baseroute
         $this->baseroute = $curBaseroute;
-
     }
-
 
     /**
      * Get all request headers
@@ -198,7 +178,6 @@ class Router
      */
     public function getRequestHeaders()
     {
-
         // getallheaders available, use that
         if (function_exists('getallheaders')) {
             return getallheaders();
@@ -212,9 +191,7 @@ class Router
             }
         }
         return $headers;
-
     }
-
 
     /**
      * Get the request method used, taking overrides into account
@@ -222,7 +199,6 @@ class Router
      */
     public function getRequestMethod()
     {
-
         // Take the method as found in $_SERVER
         $method = $_SERVER['REQUEST_METHOD'];
 
@@ -240,9 +216,7 @@ class Router
         }
 
         return $method;
-
     }
-
 
     /**
      * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a match was found
@@ -252,7 +226,6 @@ class Router
      */
     public function run($callback = null)
     {
-
         // Define which method we need to handle
         $this->method = $this->getRequestMethod();
 
@@ -285,15 +258,13 @@ class Router
         if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
             ob_end_clean();
         }
-        
+
         // Return true if a route was handled, false otherwise
         if ($numHandled === 0) {
             return false;
         }
         return true;
-
     }
-
 
     /**
      * Set the 404 handling function
@@ -304,7 +275,6 @@ class Router
         $this->notFound = $fn;
     }
 
-
     /**
      * Handle a a set of routes: if a match is found, execute the relating handling function
      * @param array $routes Collection of route patterns and their handling functions
@@ -313,7 +283,6 @@ class Router
      */
     private function handle($routes, $quitAfterRun = false)
     {
-
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
 
@@ -331,8 +300,8 @@ class Router
                 $params = array_map(function ($match, $index) use ($matches) {
 
                     // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
-                    if (isset($matches[$index+1]) && isset($matches[$index+1][0]) && is_array($matches[$index+1][0])) {
-                        return trim(substr($match[0][0], 0, $matches[$index+1][0][1] - $match[0][1]), '/');
+                    if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
+                        return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
                     } // We have no following parameters: return the whole lot
                     else {
                         return (isset($match[0][0]) ? trim($match[0][0], '/') : null);
@@ -341,7 +310,34 @@ class Router
                 }, $matches, array_keys($matches));
 
                 // call the handling function with the URL parameters
-                call_user_func_array($route['fn'], $params);
+                if (is_callable($route['fn'])) {
+                    call_user_func_array($route['fn'], $params);
+                } else {
+                    // explode segments of given route
+                    $segments = explode('@', $route['fn']);
+
+                    // if class doesn't exists, just ignore.
+                    // because the other way will result in more memory consumption.
+                    // @todo create check for namespace binding. because this way will only works if or the entire namespace is given or the class doesn't be part of a namespace
+                    // @todo in other way the user will need to a pre-check.
+                    if (class_exists($segments[0])) {
+
+                        // first check if is a static method, directly trying to invoke it.
+                        // if isn't a valid static method, we will try as a normal method invocation.
+                        if (forward_static_call_array(array($segments[0], $segments[1]), $params) === FALSE) {
+
+                            // try call the method as an non-static method.
+                            // if also this approach doesn't work, we cannot do anything anymore.
+                            if (call_user_func_array(array(new $segments[0], $segments[1]), $params) === FALSE) {
+
+                                // observation: we don't used "method_exists" since a RFC bug around of PHP Community
+                                // some times the assertion doesn't happens correctly.
+                                // also is not good throw a new exception here. That will terminate the execution of the script/
+                                // reason it's, if the router doesn't find any valid data, only need ignore it, going to next node.
+                            }
+                        }
+                    }
+                }
 
                 // yay!
                 $numHandled++;
@@ -350,16 +346,12 @@ class Router
                 if ($quitAfterRun) {
                     break;
                 }
-
             }
-
         }
 
         // Return the number of routes handled
         return $numHandled;
-
     }
-
 
     /**
      * Define the current relative URI
@@ -367,7 +359,6 @@ class Router
      */
     protected function getCurrentUri()
     {
-
         // Get the current Request URI and remove rewrite basepath from it (= allows one to run the router in a subfolder)
         $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
         $uri = substr($_SERVER['REQUEST_URI'], strlen($basepath));
@@ -381,7 +372,6 @@ class Router
         $uri = '/' . trim($uri, '/');
 
         return $uri;
-
     }
 }
 
