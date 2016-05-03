@@ -324,8 +324,22 @@ class Router
                     }
                 }, $matches, array_keys($matches));
 
-                // call the handling function with the URL parameters
-                call_user_func_array($route['fn'], $params);
+                // Call the handling function with the URL parameters if the desired input is callable
+                if (is_callable($route['fn'])) {
+                    call_user_func_array($route['fn'], $params);
+                } // if not, check the existence of special parameters
+                elseif (stripos($route['fn'], '@') !== false) {
+                    // explode segments of given route
+                    list($controller, $method) = explode('@', $route['fn']);
+                    // check if class exists, if not just ignore.
+                    if (class_exists($controller)) {
+                        // first check if is a static method, directly trying to invoke it. if isn't a valid static method, we will try as a normal method invocation.
+                        if (call_user_func_array(array(new $controller, $method), $params) === false) {
+                            // try call the method as an non-static method. (the if does nothing, only avoids the notice)
+                            if (forward_static_call_array(array($controller, $method), $params) === false) ;
+                        }
+                    }
+                }
 
                 $numHandled++;
 
