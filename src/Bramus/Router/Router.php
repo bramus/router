@@ -17,27 +17,27 @@ class Router
     /**
      * @var array The route patterns and their handling functions
      */
-    private $routes = array();
+    private $afterRoutes = array();
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
-    private $befores = array();
+    private $beforeRoutes = array();
 
     /**
      * @var object|callable The function to be executed when no route has been matched
      */
-    protected $notFound;
+    protected $notFoundCallback;
 
     /**
-     * @var string Current baseroute, used for (sub)route mounting
+     * @var string Current base route, used for (sub)route mounting
      */
-    private $baseroute = '';
+    private $baseRoute = '';
 
     /**
      * @var string The Request Method that needs to be handled
      */
-    private $method = '';
+    private $requestedMethod = '';
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
@@ -48,11 +48,11 @@ class Router
      */
     public function before($methods, $pattern, $fn)
     {
-        $pattern = $this->baseroute . '/' . trim($pattern, '/');
-        $pattern = $this->baseroute ? rtrim($pattern, '/') : $pattern;
+        $pattern = $this->baseRoute . '/' . trim($pattern, '/');
+        $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->befores[$method][] = array(
+            $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn
             );
@@ -68,11 +68,11 @@ class Router
      */
     public function match($methods, $pattern, $fn)
     {
-        $pattern = $this->baseroute . '/' . trim($pattern, '/');
-        $pattern = $this->baseroute ? rtrim($pattern, '/') : $pattern;
+        $pattern = $this->baseRoute . '/' . trim($pattern, '/');
+        $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->routes[$method][] = array(
+            $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn
             );
@@ -157,24 +157,24 @@ class Router
     }
 
     /**
-     * Mounts a collection of callables onto a base route
+     * Mounts a collection of callbacks onto a base route
      *
-     * @param string $baseroute The route subpattern to mount the callables on
-     * @param callable $fn The callabled to be called
+     * @param string $baseRoute The route sub pattern to mount the callbacks on
+     * @param callable $fn The callback method
      */
-    public function mount($baseroute, $fn)
+    public function mount($baseRoute, $fn)
     {
-        // Track current baseroute
-        $curBaseroute = $this->baseroute;
+        // Track current base route
+        $curBaseRoute = $this->baseRoute;
 
-        // Build new baseroute string
-        $this->baseroute .= $baseroute;
+        // Build new base route string
+        $this->baseRoute .= $baseRoute;
 
         // Call the callable
         call_user_func($fn);
 
-        // Restore original baseroute
-        $this->baseroute = $curBaseroute;
+        // Restore original base route
+        $this->baseRoute = $curBaseRoute;
     }
 
     /**
@@ -184,12 +184,12 @@ class Router
      */
     public function getRequestHeaders()
     {
-        // getallheaders available, use that
+        // If getallheaders() is available, use that
         if (function_exists('getallheaders')) {
             return getallheaders();
         }
 
-        // getallheaders not available: manually extract 'm
+        // Method getallheaders() not available: manually extract 'm
         $headers = array();
         foreach ($_SERVER as $name => $value) {
             if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
@@ -197,7 +197,6 @@ class Router
             }
         }
         return $headers;
-
     }
 
     /**
@@ -227,7 +226,7 @@ class Router
     }
 
     /**
-     * Execute the router: Loop all defined before middlewares and routes, and execute the handling function if a match was found
+     * Execute the router: Loop all defined before middleware's and routes, and execute the handling function if a match was found
      *
      * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
      * @return bool
@@ -235,23 +234,23 @@ class Router
     public function run($callback = null)
     {
         // Define which method we need to handle
-        $this->method = $this->getRequestMethod();
+        $this->requestedMethod = $this->getRequestMethod();
 
         // Handle all before middlewares
-        if (isset($this->befores[$this->method])) {
-            $this->handle($this->befores[$this->method]);
+        if (isset($this->beforeRoutes[$this->requestedMethod])) {
+            $this->handle($this->beforeRoutes[$this->requestedMethod]);
         }
 
         // Handle all routes
         $numHandled = 0;
-        if (isset($this->routes[$this->method])) {
-            $numHandled = $this->handle($this->routes[$this->method], true);
+        if (isset($this->afterRoutes[$this->requestedMethod])) {
+            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
         }
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            if ($this->notFound && is_callable($this->notFound)) {
-                call_user_func($this->notFound);
+            if ($this->notFoundCallback && is_callable($this->notFoundCallback)) {
+                call_user_func($this->notFoundCallback);
             } else {
                 header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
             }
@@ -282,7 +281,7 @@ class Router
      */
     public function set404($fn)
     {
-        $this->notFound = $fn;
+        $this->notFoundCallback = $fn;
     }
 
     /**
@@ -346,9 +345,9 @@ class Router
      */
     protected function getCurrentUri()
     {
-        // Get the current Request URI and remove rewrite basepath from it (= allows one to run the router in a subfolder)
-        $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
-        $uri = substr($_SERVER['REQUEST_URI'], strlen($basepath));
+        // Get the current Request URI and remove rewrite base path from it (= allows one to run the router in a sub folder)
+        $basePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+        $uri = substr($_SERVER['REQUEST_URI'], strlen($basePath));
 
         // Don't take query params into account on the URL
         if (strstr($uri, '?')) {
