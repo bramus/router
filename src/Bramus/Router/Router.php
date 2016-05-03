@@ -40,6 +40,11 @@ class Router
     private $requestedMethod = '';
 
     /**
+     * @var string The Server Base Path for Router Execution
+     */
+    private $serverBasePath;
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
      *
      * @param string $methods Allowed methods, | delimited
@@ -196,6 +201,7 @@ class Router
                 $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
             }
         }
+
         return $headers;
     }
 
@@ -316,22 +322,18 @@ class Router
                     else {
                         return (isset($match[0][0]) ? trim($match[0][0], '/') : null);
                     }
-
                 }, $matches, array_keys($matches));
 
                 // call the handling function with the URL parameters
                 call_user_func_array($route['fn'], $params);
 
-                // yay!
                 $numHandled++;
 
                 // If we need to quit, then quit
                 if ($quitAfterRun) {
                     break;
                 }
-
             }
-
         }
 
         // Return the number of routes handled
@@ -346,8 +348,7 @@ class Router
     protected function getCurrentUri()
     {
         // Get the current Request URI and remove rewrite base path from it (= allows one to run the router in a sub folder)
-        $basePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
-        $uri = substr($_SERVER['REQUEST_URI'], strlen($basePath));
+        $uri = substr($_SERVER['REQUEST_URI'], strlen($this->getBasePath()));
 
         // Don't take query params into account on the URL
         if (strstr($uri, '?')) {
@@ -355,8 +356,21 @@ class Router
         }
 
         // Remove trailing slash + enforce a slash at the start
-        $uri = '/' . trim($uri, '/');
+        return '/' . trim($uri, '/');
+    }
 
-        return $uri;
+    /**
+     * Return server base Path, and define it if isn't defined.
+     *
+     * @return string
+     */
+    protected function getBasePath()
+    {
+        // Check if server base path is defined, if not define it.
+        if (null === $this->serverBasePath) {
+            $this->serverBasePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+        }
+
+        return $this->serverBasePath;
     }
 }
