@@ -534,6 +534,22 @@ class RouterTest extends PHPUnit_Framework_TestCase
         // Cleanup
         ob_end_clean();
     }
+    
+    public function testBasicController()
+    {
+        $router = new \Bramus\Router\Router();
+        
+        $router->get('/show/(.*)', 'RouterTestController@show');
+        
+        ob_start();
+        $_SERVER['REQUEST_URI'] = '/show/foo';
+        $router->run();
+        
+        $this->assertEquals('foo', ob_get_contents());
+        
+        // cleanup
+        ob_end_clean();
+    }
 
     public function testSubfolders()
     {
@@ -600,6 +616,14 @@ class RouterTest extends PHPUnit_Framework_TestCase
             'PUT',
             $method->invoke(new \Bramus\Router\Router())
         );
+    }
+}
+
+class RouterTestController
+{
+    public function show($id)
+    {
+        echo $id;
     }
 }
 
