@@ -14,6 +14,7 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 - Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` and `HEAD` request methods
 - Supports `X-HTTP-Method-Override` header
 - Subrouting
+- Allowance of Class@Method calls 
 - Custom 404 handling
 - Before Route Middlewares
 - Before Router Middlewares
@@ -192,6 +193,22 @@ $router->mount('/movies', function() use ($router) {
 
 Nesting of subroutes is possible, just define a second `$router->mount()` in the callable that's already contained within a preceding `$router->mount()`.
 
+
+### Class@Method calls 
+
+We can route to the class action like so:
+
+```php
+$router->get('/(\d+)', 'User@showProfile');
+```
+
+When a request matches the specified route URI, the showProfile method on the User class will be executed. obviously the route parameters will be passed to the class method.
+
+And it is very important to note that we will need to specify the full class namespace.
+
+```php
+$router->get('/(\d+)', '\<NamespaceName>(\<SubNamespaceNames>)*\<ClassName>@showProfile');
+```
 
 ### Custom 404
 
