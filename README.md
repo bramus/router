@@ -207,7 +207,7 @@ When a request matches the specified route URI, the showProfile method on the Us
 And it is very important to note that we will need to specify the full class namespace.
 
 ```php
-$router->get('/(\d+)', '\<NamespaceName>(\<SubNamespaceNames>)*\<ClassName>@showProfile');
+$router->get('/(\d+)', '\App\Controllers\User@showProfile');
 ```
 
 ### Custom 404
