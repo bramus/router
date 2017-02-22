@@ -297,7 +297,7 @@ class Router
      * @param boolean $quitAfterRun Does the handle function need to quit after one route was matched?
      * @return int The number of routes handled
      */
-    private function handle($routes, $quitAfterRun = false)
+    protected function handle($routes, $quitAfterRun = false)
     {
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
