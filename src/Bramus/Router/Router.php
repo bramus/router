@@ -234,8 +234,8 @@ class Router
      */
     public function getRequestMethod()
     {
-        // If the Requested Method wasn't stored yet, store it
-        if(empty($this->method)) {
+        // If the Requested Method wasn't stored yet, store it (second clause, because of phpunit)
+        if(empty($this->method) || $this->method !== $_SERVER['REQUEST_METHOD']) {
             // Take the method as found in $_SERVER
             $method = $_SERVER['REQUEST_METHOD'];
 
