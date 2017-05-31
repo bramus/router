@@ -1,7 +1,10 @@
 <?php
 
 namespace {
-    class RouterTest extends PHPUnit_Framework_TestCase
+
+    use PHPUnit\Framework\TestCase;
+
+    class RouterTest extends TestCase
     {
         protected function setUp()
         {
