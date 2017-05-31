@@ -334,6 +334,9 @@ class Router
 
         // Loop all routes
         foreach ($routes as $route) {
+            // Replace all curly braces matches {} into word patterns (like Laravel)
+            $route['pattern'] = preg_replace('/{([A-Za-z]*?)}/', '(\w+)', $route['pattern']);
+
             // we have a match!
             if (preg_match_all('#^' . $route['pattern'] . '$#', $uri, $matches, PREG_OFFSET_CAPTURE)) {
                 // Rework matches to only contain the matches, not the orig string

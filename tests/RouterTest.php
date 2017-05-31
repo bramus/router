@@ -246,6 +246,24 @@ class RouterTest extends PHPUnit_Framework_TestCase
         ob_end_clean();
     }
 
+    public function testCurlyBracesRoutes()
+    {
+        // Create Router
+        $router = new \Bramus\Router\Router();
+        $router->get('/hello/{name}/{lastname}', function ($name, $lastname) {
+            echo 'Hello ' . $name . ' ' . $lastname;
+        });
+
+        // Test the /hello/bramus route
+        ob_start();
+        $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
+        $router->run();
+        $this->assertEquals('Hello bramus sumarb', ob_get_contents());
+
+        // Cleanup
+        ob_end_clean();
+    }
+
     public function testDynamicRouteWithOptionalSubpatterns()
     {
         // Create Router
