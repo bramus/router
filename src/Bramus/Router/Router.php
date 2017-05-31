@@ -45,6 +45,11 @@ class Router
     private $serverBasePath;
 
     /**
+     * @var array The Http Request Headers
+     */
+    private $headers = array();
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
      *
      * @param string $methods Allowed methods, | delimited
@@ -189,20 +194,32 @@ class Router
      */
     public function getRequestHeaders()
     {
-        // If getallheaders() is available, use that
-        if (function_exists('getallheaders')) {
-            return getallheaders();
-        }
+        // If our headers variable is not set, we need to fill it
+        if (empty($this->headers)) {
+            $headers = array();
 
-        // Method getallheaders() not available: manually extract 'm
-        $headers = array();
-        foreach ($_SERVER as $name => $value) {
-            if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            // If getallheaders() is available, use that
+            if (function_exists('getallheaders')) {
+                $headers = getallheaders();
+
+                // getallheaders() can return false if something got wrong
+                if ($headers !== false) {
+                    return $this->headers = $headers;
+                }
             }
+
+            // Method getallheaders() not available or went wrong: manually extract 'm
+            foreach ($_SERVER as $name => $value) {
+                if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
+                    $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                }
+            }
+
+            return $this->headers = $headers;
         }
 
-        return $headers;
+        // Headers already filled, return it
+        return $this->headers;
     }
 
     /**
