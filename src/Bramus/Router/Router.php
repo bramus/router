@@ -55,6 +55,11 @@ class Router
     private $method = '';
 
     /**
+     * @var string Default Controllers Namespace
+     */
+    private $namespace = '';
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
      *
      * @param string $methods Allowed methods, | delimited
@@ -235,7 +240,7 @@ class Router
     public function getRequestMethod()
     {
         // If the Requested Method wasn't stored yet, store it (second clause, because of phpunit)
-        if(empty($this->method) || $this->method !== $_SERVER['REQUEST_METHOD']) {
+        if (empty($this->method) || $this->method !== $_SERVER['REQUEST_METHOD']) {
             // Take the method as found in $_SERVER
             $method = $_SERVER['REQUEST_METHOD'];
 
@@ -256,6 +261,28 @@ class Router
         }
 
         return $this->method;
+    }
+
+    /**
+     * Set a Default Lookup Namespace for Callable methods
+     *
+     * @param string $namespace A given namespace
+     */
+    public function setNamespace($namespace)
+    {
+        if (is_string($namespace)) {
+            $this->namespace = $namespace;
+        }
+    }
+
+    /**
+     * Get the given Namespace before
+     *
+     * @return string The given Namespace if exists
+     */
+    public function getNamespace()
+    {
+        return $this->namespace;
     }
 
     /**
@@ -363,6 +390,13 @@ class Router
                     list($controller, $method) = explode('@', $route['fn']);
                     // check if class exists, if not just ignore.
                     if (class_exists($controller)) {
+                        // first check if is a static method, directly trying to invoke it. if isn't a valid static method, we will try as a normal method invocation.
+                        if (call_user_func_array(array(new $controller, $method), $params) === false) {
+                            // try call the method as an non-static method. (the if does nothing, only avoids the notice)
+                            if (forward_static_call_array(array($controller, $method), $params) === false) ;
+                        }
+                    } // check if the class exists on the default namespace
+                    elseif (class_exists($controller = ($this->getNamespace() . '\\' . $controller))) {
                         // first check if is a static method, directly trying to invoke it. if isn't a valid static method, we will try as a normal method invocation.
                         if (call_user_func_array(array(new $controller, $method), $params) === false) {
                             // try call the method as an non-static method. (the if does nothing, only avoids the notice)
