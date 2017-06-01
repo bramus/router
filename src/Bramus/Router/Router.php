@@ -316,7 +316,7 @@ class Router
             }
         } // If a route was handled, perform the finish callback (if any)
         else {
-            if ($callback) {
+            if ($callback && is_callable($callback)) {
                 $callback();
             }
         }
@@ -327,11 +327,7 @@ class Router
         }
 
         // Return true if a route was handled, false otherwise
-        if ($numHandled === 0) {
-            return false;
-        }
-
-        return true;
+        return $numHandled !== 0;
     }
 
     /**
