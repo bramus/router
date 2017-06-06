@@ -237,7 +237,7 @@ class Router
      *
      * @return string The Request method to handle
      */
-    public function getRequestMethod()
+    public function method()
     {
         // If the Requested Method wasn't stored yet, store it (second clause, because of phpunit)
         if (empty($this->method)) {
@@ -293,7 +293,7 @@ class Router
     public function run($callback = null)
     {
         // Define which method we need to handle
-        $this->requestedMethod = $this->getRequestMethod();
+        $this->requestedMethod = $this->method();
 
         // Handle all before middlewares
         if (isset($this->beforeRoutes[$this->requestedMethod])) {
