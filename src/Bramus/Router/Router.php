@@ -202,7 +202,7 @@ class Router
      *
      * @return array The request headers
      */
-    public function getRequestHeaders()
+    public function headers()
     {
         // If our headers variable is not set, we need to fill it
         if (empty($this->headers)) {
@@ -251,8 +251,8 @@ class Router
                 $method = 'GET';
             } // If it's a POST request, check for a method override header
             elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                if (isset($this->getRequestHeaders()['X-HTTP-Method-Override']) && in_array($this->getRequestHeaders()['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
-                    $method = $this->getRequestHeaders()['X-HTTP-Method-Override'];
+                if (isset($this->headers()['X-HTTP-Method-Override']) && in_array($this->headers()['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
+                    $method = $this->headers()['X-HTTP-Method-Override'];
                 }
             }
 
