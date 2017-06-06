@@ -88,70 +88,77 @@ namespace {
 
         public function testRequestMethods()
         {
-            // Create Router
+            // Start to Listen to Output
+            ob_start();
+
+            // Test GET
             $router = new \Bramus\Router\Router();
             $router->get('/', function () {
                 echo 'get';
             });
-            $router->post('/', function () {
-                echo 'post';
-            });
-            $router->put('/', function () {
-                echo 'put';
-            });
-            $router->patch('/', function () {
-                echo 'patch';
-            });
-            $router->delete('/', function () {
-                echo 'delete';
-            });
-            $router->options('/', function () {
-                echo 'options';
-            });
-
-            // Test GET
-            ob_start();
+            ob_clean();
             $_SERVER['REQUEST_URI'] = '/';
             $router->run();
             $this->assertEquals('get', ob_get_contents());
 
             // Test POST
+            $router = new \Bramus\Router\Router();
+            $router->post('/', function () {
+                echo 'post';
+            });
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'POST';
             $router->run();
             $this->assertEquals('post', ob_get_contents());
 
             // Test PUT
+            $router = new \Bramus\Router\Router();
+            $router->put('/', function () {
+                echo 'put';
+            });
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'PUT';
             $router->run();
             $this->assertEquals('put', ob_get_contents());
 
             // Test PATCH
+            $router = new \Bramus\Router\Router();
+            $router->patch('/', function () {
+                echo 'patch';
+            });
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'PATCH';
             $router->run();
             $this->assertEquals('patch', ob_get_contents());
 
             // Test DELETE
+            $router = new \Bramus\Router\Router();
+            $router->delete('/', function () {
+                echo 'delete';
+            });
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'DELETE';
             $router->run();
             $this->assertEquals('delete', ob_get_contents());
 
             // Test OPTIONS
+            $router = new \Bramus\Router\Router();
+            $router->options('/', function () {
+                echo 'options';
+            });
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
             $router->run();
             $this->assertEquals('options', ob_get_contents());
 
             // Test HEAD
+            $router = new \Bramus\Router\Router();
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'HEAD';
             $router->run();
             $this->assertEquals('', ob_get_contents());
 
-            // Cleanup
+            // Finish Cleanup
             ob_end_clean();
         }
 
@@ -431,6 +438,7 @@ namespace {
         public function testDefault404()
         {
             // Create Router
+            ob_start();
             $router = new \Bramus\Router\Router();
             $router->get('/', function () {
                 echo 'home';
@@ -440,7 +448,6 @@ namespace {
             ob_clean();
             $_SERVER['REQUEST_URI'] = '/foo';
             $router->run();
-            $headers = xdebug_get_headers(); // @todo: this is empty??!
             $this->assertEquals('', ob_get_contents());
 
             // Cleanup
@@ -574,13 +581,11 @@ namespace {
         {
             $router = new \Bramus\Router\Router();
 
-            $router->setNamespace('\Hello');
-
             $router->get('/show/(.*)', 'HelloRouterTestController@show');
 
             ob_start();
             $_SERVER['REQUEST_URI'] = '/show/foo';
-            $router->run();
+            $router->run(null, '\Hello');
 
             $this->assertEquals('foo', ob_get_contents());
 
@@ -644,7 +649,7 @@ namespace {
 
             $method = new ReflectionMethod(
                 '\Bramus\Router\Router',
-                'getRequestMethod'
+                'method'
             );
 
             $method->setAccessible(true);

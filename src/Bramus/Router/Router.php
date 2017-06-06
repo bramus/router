@@ -286,18 +286,18 @@ class Router
             $this->namespace = $namespace;
         }
 
-        // Define which method we need to handle
-        $this->requestedMethod = $this->method();
+        // Store the Method
+        $this->method();
 
         // Handle all before middlewares
-        if (isset($this->beforeRoutes[$this->requestedMethod])) {
-            $this->handle($this->beforeRoutes[$this->requestedMethod]);
+        if (isset($this->beforeRoutes[$this->method])) {
+            $this->handle($this->beforeRoutes[$this->method]);
         }
 
         // Handle all routes
         $numHandled = 0;
-        if (isset($this->afterRoutes[$this->requestedMethod])) {
-            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+        if (isset($this->afterRoutes[$this->method])) {
+            $numHandled = $this->handle($this->afterRoutes[$this->method], true);
         }
 
         // If no route was handled, trigger the 404 (if any)
@@ -305,7 +305,7 @@ class Router
             if ($this->notFoundCallback && is_callable($this->notFoundCallback)) {
                 call_user_func($this->notFoundCallback);
             } else {
-                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+                http_response_code(404);
             }
         } // If a route was handled, perform the finish callback (if any)
         else {
