@@ -263,18 +263,6 @@ class Router
     }
 
     /**
-     * Set a Default Lookup Namespace for Callable methods
-     *
-     * @param string $namespace A given namespace
-     */
-    public function setNamespace($namespace)
-    {
-        if (is_string($namespace)) {
-            $this->namespace = $namespace;
-        }
-    }
-
-    /**
      * Get the given Namespace before
      *
      * @return string The given Namespace if exists
@@ -288,10 +276,16 @@ class Router
      * Execute the router: Loop all defined before middleware's and routes, and execute the handling function if a match was found
      *
      * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
+     * @param null $namespace A desired namespace for lookup on the Class@Method Calls
      * @return bool
      */
-    public function run($callback = null)
+    public function run($callback = null, $namespace = null)
     {
+        // Define the namespace if were set
+        if (is_string($namespace)) {
+            $this->namespace = $namespace;
+        }
+
         // Define which method we need to handle
         $this->requestedMethod = $this->method();
 
