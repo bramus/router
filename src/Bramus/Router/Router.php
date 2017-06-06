@@ -286,8 +286,7 @@ class Router
             $this->namespace = $namespace;
         }
 
-        // Set Headers and Method if actually not set.
-        $this->headers();
+        // Set headers and method if actually not set.
         $this->method();
 
         // Handle all before middlewares
