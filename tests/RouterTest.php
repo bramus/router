@@ -92,69 +92,69 @@ namespace {
             ob_start();
 
             // Test GET
+            $_SERVER['REQUEST_URI'] = '/';
             $router = new \Bramus\Router\Router();
             $router->get('/', function () {
                 echo 'get';
             });
             ob_clean();
-            $_SERVER['REQUEST_URI'] = '/';
             $router->run();
             $this->assertEquals('get', ob_get_contents());
 
             // Test POST
+            $_SERVER['REQUEST_METHOD'] = 'POST';
             $router = new \Bramus\Router\Router();
             $router->post('/', function () {
                 echo 'post';
             });
             ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'POST';
             $router->run();
             $this->assertEquals('post', ob_get_contents());
 
             // Test PUT
+            $_SERVER['REQUEST_METHOD'] = 'PUT';
             $router = new \Bramus\Router\Router();
             $router->put('/', function () {
                 echo 'put';
             });
             ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'PUT';
             $router->run();
             $this->assertEquals('put', ob_get_contents());
 
             // Test PATCH
+            $_SERVER['REQUEST_METHOD'] = 'PATCH';
             $router = new \Bramus\Router\Router();
             $router->patch('/', function () {
                 echo 'patch';
             });
             ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'PATCH';
             $router->run();
             $this->assertEquals('patch', ob_get_contents());
 
             // Test DELETE
+            $_SERVER['REQUEST_METHOD'] = 'DELETE';
             $router = new \Bramus\Router\Router();
             $router->delete('/', function () {
                 echo 'delete';
             });
             ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'DELETE';
             $router->run();
             $this->assertEquals('delete', ob_get_contents());
 
             // Test OPTIONS
+            $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
             $router = new \Bramus\Router\Router();
             $router->options('/', function () {
                 echo 'options';
             });
             ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
             $router->run();
             $this->assertEquals('options', ob_get_contents());
 
             // Test HEAD
+            $_SERVER['REQUEST_METHOD'] = 'HEAD';
             $router = new \Bramus\Router\Router();
             ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'HEAD';
             $router->run();
             $this->assertEquals('', ob_get_contents());
 

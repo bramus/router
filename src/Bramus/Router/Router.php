@@ -35,11 +35,6 @@ class Router
     private $baseRoute = '';
 
     /**
-     * @var string The Request Method that needs to be handled
-     */
-    private $requestedMethod = '';
-
-    /**
      * @var string The Server Base Path for Router Execution
      */
     private $serverBasePath;
@@ -200,9 +195,10 @@ class Router
     /**
      * Get all request headers
      *
-     * @return array The request headers
+     * @param string|null $requestedHeader A specific header to return
+     * @return array|string|bool The request headers
      */
-    public function headers()
+    public function headers($requestedHeader = null)
     {
         // If our headers variable is not set, we need to fill it
         if (empty($this->headers)) {
@@ -225,10 +221,14 @@ class Router
                 }
             }
 
-            return $this->headers = $headers;
+            $this->headers = $headers;
         }
 
-        // Headers already filled, return it
+        // Check if want a specific header
+        if ($requestedHeader !== null) {
+            return array_key_exists($requestedHeader, $this->headers) ? $this->headers[$requestedHeader] : false;
+        }
+
         return $this->headers;
     }
 
@@ -251,8 +251,8 @@ class Router
                 $method = 'GET';
             } // If it's a POST request, check for a method override header
             elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                if (isset($this->headers()['X-HTTP-Method-Override']) && in_array($this->headers()['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
-                    $method = $this->headers()['X-HTTP-Method-Override'];
+                if ($this->headers('X-HTTP-Method-Override') && in_array($this->headers('X-HTTP-Method-Override'), array('PUT', 'DELETE', 'PATCH'))) {
+                    $method = $this->headers('X-HTTP-Method-Override');
                 }
             }
 
@@ -286,7 +286,8 @@ class Router
             $this->namespace = $namespace;
         }
 
-        // Store the Method
+        // Set Headers and Method if actually not set.
+        $this->headers();
         $this->method();
 
         // Handle all before middlewares
