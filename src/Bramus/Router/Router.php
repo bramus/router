@@ -269,7 +269,7 @@ class Router
      */
     public function getNamespace()
     {
-        return $this->namespace;
+        return $this->namespace . '\\';
     }
 
     /**
@@ -378,7 +378,7 @@ class Router
                     // explode segments of given route
                     list($controller, $method) = explode('@', $route['fn']);
                     // check if class exists, if not just ignore and check if the class exists on the default namespace
-                    if (class_exists((!empty($this->getNamespace()) ? ($controller = ($this->getNamespace() . '\\' . $controller)) : $controller))) {
+                    if (class_exists(($controller = $this->getNamespace() . $controller))) {
                         // first check if is a static method, directly trying to invoke it. if isn't a valid static method, we will try as a normal method invocation.
                         if (call_user_func_array(array(new $controller, $method), $params) === false) {
                             // try call the method as an non-static method. (the if does nothing, only avoids the notice)
