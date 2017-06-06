@@ -35,14 +35,24 @@ class Router
     private $baseRoute = '';
 
     /**
-     * @var string The Request Method that needs to be handled
-     */
-    private $requestedMethod = '';
-
-    /**
      * @var string The Server Base Path for Router Execution
      */
     private $serverBasePath;
+
+    /**
+     * @var array The Http Requested Headers
+     */
+    private $headers = array();
+
+    /**
+     * @var string The Http Requested Method
+     */
+    private $method = '';
+
+    /**
+     * @var string Default Controllers Namespace
+     */
+    private $namespace = '';
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods
@@ -185,24 +195,41 @@ class Router
     /**
      * Get all request headers
      *
-     * @return array The request headers
+     * @param string|null $requestedHeader A specific header to return
+     * @return array|string|bool The request headers
      */
-    public function getRequestHeaders()
+    public function headers($requestedHeader = null)
     {
-        // If getallheaders() is available, use that
-        if (function_exists('getallheaders')) {
-            return getallheaders();
-        }
+        // If our headers variable is not set, we need to fill it
+        if (empty($this->headers)) {
+            $headers = array();
 
-        // Method getallheaders() not available: manually extract 'm
-        $headers = array();
-        foreach ($_SERVER as $name => $value) {
-            if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            // If getallheaders() is available, use that
+            if (function_exists('getallheaders')) {
+                $headers = getallheaders();
+
+                // getallheaders() can return false if something got wrong
+                if ($headers !== false) {
+                    return $this->headers = $headers;
+                }
             }
+
+            // Method getallheaders() not available or went wrong: manually extract 'm
+            foreach ($_SERVER as $name => $value) {
+                if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
+                    $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                }
+            }
+
+            $this->headers = $headers;
         }
 
-        return $headers;
+        // Check if want a specific header
+        if ($requestedHeader !== null) {
+            return array_key_exists($requestedHeader, $this->headers) ? $this->headers[$requestedHeader] : false;
+        }
+
+        return $this->headers;
     }
 
     /**
@@ -210,47 +237,67 @@ class Router
      *
      * @return string The Request method to handle
      */
-    public function getRequestMethod()
+    public function method()
     {
-        // Take the method as found in $_SERVER
-        $method = $_SERVER['REQUEST_METHOD'];
+        // If the Requested Method wasn't stored yet, store it (second clause, because of phpunit)
+        if (empty($this->method)) {
+            // Take the method as found in $_SERVER
+            $method = $_SERVER['REQUEST_METHOD'];
 
-        // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
-        // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
-            ob_start();
-            $method = 'GET';
-        } // If it's a POST request, check for a method override header
-        elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $headers = $this->getRequestHeaders();
-            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
-                $method = $headers['X-HTTP-Method-Override'];
+            // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
+            // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
+            if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+                ob_start();
+                $method = 'GET';
+            } // If it's a POST request, check for a method override header
+            elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                if ($this->headers('X-HTTP-Method-Override') && in_array($this->headers('X-HTTP-Method-Override'), array('PUT', 'DELETE', 'PATCH'))) {
+                    $method = $this->headers('X-HTTP-Method-Override');
+                }
             }
+
+            return $this->method = $method;
         }
 
-        return $method;
+        return $this->method;
+    }
+
+    /**
+     * Get the given Namespace before
+     *
+     * @return string The given Namespace if exists
+     */
+    public function getNamespace()
+    {
+        return $this->namespace . '\\';
     }
 
     /**
      * Execute the router: Loop all defined before middleware's and routes, and execute the handling function if a match was found
      *
      * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
+     * @param null $namespace A desired namespace for lookup on the Class@Method Calls
      * @return bool
      */
-    public function run($callback = null)
+    public function run($callback = null, $namespace = null)
     {
-        // Define which method we need to handle
-        $this->requestedMethod = $this->getRequestMethod();
+        // Define the namespace if were set
+        if (is_string($namespace)) {
+            $this->namespace = $namespace;
+        }
+
+        // Set headers and method if actually not set.
+        $this->method();
 
         // Handle all before middlewares
-        if (isset($this->beforeRoutes[$this->requestedMethod])) {
-            $this->handle($this->beforeRoutes[$this->requestedMethod]);
+        if (isset($this->beforeRoutes[$this->method])) {
+            $this->handle($this->beforeRoutes[$this->method]);
         }
 
         // Handle all routes
         $numHandled = 0;
-        if (isset($this->afterRoutes[$this->requestedMethod])) {
-            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+        if (isset($this->afterRoutes[$this->method])) {
+            $numHandled = $this->handle($this->afterRoutes[$this->method], true);
         }
 
         // If no route was handled, trigger the 404 (if any)
@@ -258,11 +305,11 @@ class Router
             if ($this->notFoundCallback && is_callable($this->notFoundCallback)) {
                 call_user_func($this->notFoundCallback);
             } else {
-                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+                @header("{$_SERVER['SERVER_PROTOCOL']} 404 Not Found", true, 404);
             }
         } // If a route was handled, perform the finish callback (if any)
         else {
-            if ($callback) {
+            if ($callback && is_callable($callback)) {
                 $callback();
             }
         }
@@ -273,11 +320,7 @@ class Router
         }
 
         // Return true if a route was handled, false otherwise
-        if ($numHandled === 0) {
-            return false;
-        }
-
-        return true;
+        return $numHandled !== 0;
     }
 
     /**
@@ -307,6 +350,9 @@ class Router
 
         // Loop all routes
         foreach ($routes as $route) {
+            // Replace all curly braces matches {} into word patterns (like Laravel)
+            $route['pattern'] = preg_replace('/{([A-Za-z]*?)}/', '(\w+)', $route['pattern']);
+
             // we have a match!
             if (preg_match_all('#^' . $route['pattern'] . '$#', $uri, $matches, PREG_OFFSET_CAPTURE)) {
                 // Rework matches to only contain the matches, not the orig string
@@ -331,7 +377,9 @@ class Router
                 elseif (stripos($route['fn'], '@') !== false) {
                     // explode segments of given route
                     list($controller, $method) = explode('@', $route['fn']);
-                    // check if class exists, if not just ignore.
+                    // tries to acquire a default namespace for the controller, if no default namespace set will try full namespace
+                    $controller = $this->getNamespace() . $controller;
+                    // check if class exists, if not just ignore and check if the class exists on the default namespace
                     if (class_exists($controller)) {
                         // first check if is a static method, directly trying to invoke it. if isn't a valid static method, we will try as a normal method invocation.
                         if (call_user_func_array(array(new $controller, $method), $params) === false) {
@@ -381,7 +429,7 @@ class Router
     protected function getBasePath()
     {
         // Check if server base path is defined, if not define it.
-        if (null === $this->serverBasePath) {
+        if ($this->serverBasePath === null) {
             $this->serverBasePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
         }
 
