@@ -305,7 +305,7 @@ class Router
             if ($this->notFoundCallback && is_callable($this->notFoundCallback)) {
                 call_user_func($this->notFoundCallback);
             } else {
-                header("{$_SERVER['SERVER_PROTOCOL']} 404 Not Found");
+                @header("{$_SERVER['SERVER_PROTOCOL']} 404 Not Found", true, 404);
             }
         } // If a route was handled, perform the finish callback (if any)
         else {

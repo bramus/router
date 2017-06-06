@@ -164,53 +164,90 @@ namespace {
 
         public function testShorthandAll()
         {
+            // Start to Listen to Output
+            ob_start();
+
             // Create Router
+            $_SERVER['REQUEST_URI'] = '/';
             $router = new \Bramus\Router\Router();
             $router->all('/', function () {
                 echo 'all';
             });
 
-            $_SERVER['REQUEST_URI'] = '/';
-
             // Test GET
-            ob_start();
+            ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'GET';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('all', ob_get_contents());
 
             // Test POST
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'POST';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('all', ob_get_contents());
 
             // Test PUT
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'PUT';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('all', ob_get_contents());
 
             // Test DELETE
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'DELETE';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('all', ob_get_contents());
 
             // Test OPTIONS
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('all', ob_get_contents());
 
             // Test PATCH
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'PATCH';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('all', ob_get_contents());
 
             // Test HEAD
             ob_clean();
             $_SERVER['REQUEST_METHOD'] = 'HEAD';
+            $_SERVER['REQUEST_URI'] = '/';
+            $router = new \Bramus\Router\Router();
+            $router->all('/', function () {
+                echo 'all';
+            });
             $router->run();
             $this->assertEquals('', ob_get_contents());
 
