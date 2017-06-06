@@ -240,7 +240,7 @@ class Router
     public function getRequestMethod()
     {
         // If the Requested Method wasn't stored yet, store it (second clause, because of phpunit)
-        if (empty($this->method) || $this->method !== $_SERVER['REQUEST_METHOD']) {
+        if (empty($this->method)) {
             // Take the method as found in $_SERVER
             $method = $_SERVER['REQUEST_METHOD'];
 
@@ -251,9 +251,8 @@ class Router
                 $method = 'GET';
             } // If it's a POST request, check for a method override header
             elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                $headers = $this->getRequestHeaders();
-                if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
-                    $method = $headers['X-HTTP-Method-Override'];
+                if (isset($this->getRequestHeaders()['X-HTTP-Method-Override']) && in_array($this->getRequestHeaders()['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
+                    $method = $this->getRequestHeaders()['X-HTTP-Method-Override'];
                 }
             }
 
