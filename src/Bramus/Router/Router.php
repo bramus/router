@@ -181,6 +181,18 @@ class Router
         // Restore original base route
         $this->baseRoute = $curBaseRoute;
     }
+    
+    /**
+     * reName method mount to group
+     *
+     * @param string $baseRoute The route sub pattern to mount the callbacks on
+     * @param callable $fn The callback method
+     */
+    public function group($baseRoute, $fn)
+    {
+        // method mount
+        $this->mount($baseRoute, $fn);
+    }
 
     /**
      * Get all request headers
