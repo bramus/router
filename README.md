@@ -3,7 +3,7 @@
 [![Build Status](https://img.shields.io/travis/bramus/router.svg?style=flat-square)](http://travis-ci.org/bramus/router) ![Source](http://img.shields.io/badge/source-bramus/router-blue.svg?style=flat-square) ![Version](https://img.shields.io/packagist/v/bramus/router.svg?style=flat-square) ![Downloads](https://img.shields.io/packagist/dt/bramus/router.svg?style=flat-square) ![License](https://img.shields.io/packagist/l/bramus/router.svg?style=flat-square)
 
 A lightweight and simple object oriented PHP Router.
-Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
+Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [Contributors](https://github.com/bramus/router/graphs/contributors)
 
 
 ## Features
@@ -14,7 +14,7 @@ Built by Bram(us) Van Damme - [http://www.bram.us](http://www.bram.us)
 - Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` and `HEAD` request methods
 - Supports `X-HTTP-Method-Override` header
 - Subrouting
-- Allowance of Class@Method calls 
+- Allowance of `Class@Method` calls
 - Custom 404 handling
 - Before Route Middlewares
 - Before Router Middlewares
@@ -42,9 +42,9 @@ composer require bramus/router ~1.0
 
 ## Demo
 
-A demo is included in the `demo` subfolder. Serve it using your favorite web server, or using PHP 5.4's built-in server by executing `php -S localhost:8080` on the shell. A `.htaccess` for use with Apache is included.
+A demo is included in the `demo` subfolder. Serve it using your favorite web server, or using PHP 5.4+'s built-in server by executing `php -S localhost:8080` on the shell. A `.htaccess` for use with Apache is included.
 
-
+Additionally a demo of a mutilingual router is also included. This can be found in the `demo-multilang` subfolder and can be ran in the same manner as the normal demo.
 
 ## Usage
 
@@ -194,7 +194,7 @@ $router->mount('/movies', function() use ($router) {
 Nesting of subroutes is possible, just define a second `$router->mount()` in the callable that's already contained within a preceding `$router->mount()`.
 
 
-### Class@Method calls 
+### `Class@Method` calls
 
 We can route to the class action like so:
 
@@ -202,9 +202,9 @@ We can route to the class action like so:
 $router->get('/(\d+)', 'User@showProfile');
 ```
 
-When a request matches the specified route URI, the showProfile method on the User class will be executed. obviously the route parameters will be passed to the class method.
+When a request matches the specified route URI, the `showProfile` method on the `User` class will be executed. The defined route parameters will be passed to the class method.
 
-And it is very important to note that we will need to specify the full class namespace.
+And it is very important to note that you do not need to specify the full namespace of the class.
 
 ```php
 $router->get('/(\d+)', '\App\Controllers\User@showProfile');
