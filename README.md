@@ -199,15 +199,17 @@ Nesting of subroutes is possible, just define a second `$router->mount()` in the
 We can route to the class action like so:
 
 ```php
-$router->get('/(\d+)', 'User@showProfile');
+$router->get('/(\d+)', '\App\Controllers\User@showProfile');
 ```
 
 When a request matches the specified route URI, the `showProfile` method on the `User` class will be executed. The defined route parameters will be passed to the class method.
 
-And it is very important to note that you do not need to specify the full namespace of the class.
+If most/all of your handling classes are in one and the same namespace, you can set the default namespace to use on your router instance via `setNamespace()`
 
 ```php
-$router->get('/(\d+)', '\App\Controllers\User@showProfile');
+$router->setNamespace('\App\Controllers');
+$router->get('/users/(\d+)', 'User@showProfile');
+$router->get('/cars/(\d+)', 'Car@showProfile');
 ```
 
 ### Custom 404
