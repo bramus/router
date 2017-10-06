@@ -489,8 +489,11 @@ class RouterTest extends PHPUnit_Framework_TestCase
     {
         // Create Router
         $router = new \Bramus\Router\Router();
-        $router->before('GET', '/.*', function () {
+        $router->before('GET|POST', '/.*', function () {
             echo 'before ';
+        });
+        $router->get('/', function () {
+            echo 'root';
         });
         $router->get('/about', function () {
             echo 'about';
@@ -498,18 +501,34 @@ class RouterTest extends PHPUnit_Framework_TestCase
         $router->get('/contact', function () {
             echo 'contact';
         });
+        $router->post('/post', function () {
+            echo 'post';
+        });
+
+        // Test the / route
+        ob_start();
+        $_SERVER['REQUEST_URI'] = '/';
+        $router->run();
+        $this->assertEquals('before root', ob_get_contents());
 
         // Test the /about route
-        ob_start();
+        ob_clean();
         $_SERVER['REQUEST_URI'] = '/about';
         $router->run();
-        $this->assertContains('before', ob_get_contents());
+        $this->assertEquals('before about', ob_get_contents());
 
         // Test the /contact route
         ob_clean();
         $_SERVER['REQUEST_URI'] = '/contact';
         $router->run();
-        $this->assertContains('before', ob_get_contents());
+        $this->assertEquals('before contact', ob_get_contents());
+
+        // Test the /post route
+        ob_clean();
+        $_SERVER['REQUEST_URI'] = '/post';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $router->run();
+        $this->assertEquals('before post', ob_get_contents());
 
         // Cleanup
         ob_end_clean();
