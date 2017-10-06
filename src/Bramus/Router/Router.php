@@ -44,11 +44,6 @@ class Router
     private $serverBasePath;
 
     /**
-     * @var array The Http Request Headers
-     */
-    private $headers = array();
-
-    /**
      * @var string Default Controllers Namespace
      */
     private $namespace = '';
@@ -198,32 +193,26 @@ class Router
      */
     public function getRequestHeaders()
     {
-        // If our headers variable is not set, we need to fill it
-        if (empty($this->headers)) {
-            $headers = array();
+        $headers = array();
 
-            // If getallheaders() is available, use that
-            if (function_exists('getallheaders')) {
-                $headers = getallheaders();
+        // If getallheaders() is available, use that
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
 
-                // getallheaders() can return false if something got wrong
-                if ($headers !== false) {
-                    return $this->headers = $headers;
-                }
+            // getallheaders() can return false if something went wrong
+            if ($headers !== false) {
+                return $headers;
             }
-
-            // Method getallheaders() not available or went wrong: manually extract 'm
-            foreach ($_SERVER as $name => $value) {
-                if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                    $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
-                }
-            }
-
-            return $this->headers = $headers;
         }
 
-        // Headers already filled, return it
-        return $this->headers;
+        // Method getallheaders() not available or went wrong: manually extract 'm
+        foreach ($_SERVER as $name => $value) {
+            if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
+                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            }
+        }
+
+        return $headers;
     }
 
     /**
