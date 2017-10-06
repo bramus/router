@@ -425,28 +425,6 @@ namespace {
             ob_end_clean();
         }
 
-        /**
-         * @runInSeparateProcess
-         */
-        public function testDefault404()
-        {
-            // Create Router
-            $router = new \Bramus\Router\Router();
-            $router->get('/', function () {
-                echo 'home';
-            });
-
-            // Test the /hello route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/foo';
-            $router->run();
-            $headers = xdebug_get_headers(); // @todo: this is empty??!
-            $this->assertEquals('', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
-        }
-
         public function test404()
         {
             // Create Router
