@@ -216,7 +216,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/hello/(\w+)', function ($name) {
-                echo 'Hello ' . $name;
+                echo 'Hello '.$name;
             });
 
             // Test the /hello/bramus route
@@ -234,7 +234,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/hello/(\w+)/(\w+)', function ($name, $lastname) {
-                echo 'Hello ' . $name . ' ' . $lastname;
+                echo 'Hello '.$name.' '.$lastname;
             });
 
             // Test the /hello/bramus route
@@ -252,7 +252,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/hello/{name}/{lastname}', function ($name, $lastname) {
-                echo 'Hello ' . $name . ' ' . $lastname;
+                echo 'Hello '.$name.' '.$lastname;
             });
 
             // Test the /hello/bramus route
@@ -270,7 +270,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/hello(/\w+)?', function ($name = null) {
-                echo 'Hello ' . (($name) ? $name : 'stranger');
+                echo 'Hello '.(($name) ? $name : 'stranger');
             });
 
             // Test the /hello route
@@ -294,7 +294,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/(.*)/page([0-9]+)', function ($place, $page) {
-                echo 'Hello ' . $place . ' page : ' . $page;
+                echo 'Hello '.$place.' page : '.$page;
             });
 
             // Test the /hello/bramus/page3 route
@@ -314,21 +314,25 @@ namespace {
             $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function ($year = null, $month = null, $day = null, $slug = null) {
                 if (!$year) {
                     echo 'Blog overview';
+
                     return;
                 }
                 if (!$month) {
-                    echo 'Blog year overview (' . $year . ')';
+                    echo 'Blog year overview ('.$year.')';
+
                     return;
                 }
                 if (!$day) {
-                    echo 'Blog month overview (' . $year . '-' . $month . ')';
+                    echo 'Blog month overview ('.$year.'-'.$month.')';
+
                     return;
                 }
                 if (!$slug) {
-                    echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')';
+                    echo 'Blog day overview ('.$year.'-'.$month.'-'.$day.')';
+
                     return;
                 }
-                echo 'Blogpost ' . htmlentities($slug) . ' detail (' . $year . '-' . $month . '-' . $day . ')';
+                echo 'Blogpost '.htmlentities($slug).' detail ('.$year.'-'.$month.'-'.$day.')';
             });
 
             // Test the /blog route
@@ -370,7 +374,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/hello(/\w+(/\w+)?)?', function ($name1 = null, $name2 = null) {
-                echo 'Hello ' . (($name1) ? $name1 : 'stranger') . ' ' . (($name2) ? $name2 : 'stranger');
+                echo 'Hello '.(($name1) ? $name1 : 'stranger').' '.(($name2) ? $name2 : 'stranger');
             });
 
             // Test the /hello/bramus route
@@ -394,7 +398,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('(.*)', function ($name) {
-                echo 'Hello ' . $name;
+                echo 'Hello '.$name;
             });
 
             // Test the /hello/bramus route
@@ -412,7 +416,7 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/hello/(.*)', function ($name) {
-                echo 'Hello ' . $name;
+                echo 'Hello '.$name;
             });
 
             // Test the /hello/bramus route
