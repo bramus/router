@@ -35,7 +35,7 @@ Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [
 Installation is possible using Composer
 
 ```
-composer require bramus/router ~1.0
+composer require bramus/router ~1.2
 ```
 
 
