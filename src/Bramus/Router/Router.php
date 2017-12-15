@@ -49,6 +49,11 @@ class Router
     private $namespace = '';
 
     /**
+     * @var array The default constructor params
+     */
+    private $constructorDefaults = array();
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
      *
      * @param string          $methods Allowed methods, | delimited
@@ -264,6 +269,28 @@ class Router
     }
 
     /**
+     * Set a Default set of params to be passed to the controller contructor.
+     *
+     * @param array $constructorDefaults A list of params
+     */
+    public function setConstructorDefaults(...$constructorDefaults)
+    {
+        if (is_array($constructorDefaults)) {
+            $this->constructorDefaults = $constructorDefaults;
+        }
+    }
+
+    /**
+     * Get the constructor defaults.
+     *
+     * @return array The request headers
+     */
+    public function getConstructorDefaults()
+    {
+        return $this->constructorDefaults;
+    }
+
+    /**
      * Execute the router: Loop all defined before middleware's and routes, and execute the handling function if a match was found.
      *
      * @param object|callable $callback Function to be executed after a matching route was handled (= after router middleware)
@@ -370,9 +397,10 @@ class Router
                     }
                     // Check if class exists, if not just ignore and check if the class exists on the default namespace
                     if (class_exists($controller)) {
+                        $defaults = $this->getConstructorDefaults();
                         // First check if is a static method, directly trying to invoke it.
                         // If isn't a valid static method, we will try as a normal method invocation.
-                        if (call_user_func_array(array(new $controller(), $method), $params) === false) {
+                        if (call_user_func_array(array(new $controller(...$defaults), $method), $params) === false) {
                             // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
                             if (forward_static_call_array(array($controller, $method), $params) === false);
                         }
