@@ -90,6 +90,10 @@ $router->patch('pattern', function() { /* ... */ });
 
 Note: Routes must be hooked before `$router->run();` is being called.
 
+You can use this shorthand for a route that can be accessed using any method:
+```php
+$router->all('pattern', function() { … });
+```
 
 ### Route Patterns
 
