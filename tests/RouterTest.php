@@ -1,6 +1,13 @@
 <?php
 
 namespace {
+
+    class Handler {
+        public function notfound() {
+            echo 'route not found';
+        }
+    }
+
     class RouterTest extends PHPUnit_Framework_TestCase
     {
         protected function setUp()
@@ -439,6 +446,58 @@ namespace {
             $router->set404(function () {
                 echo 'route not found';
             });
+
+            // Test the /hello route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/';
+            $router->run();
+            $this->assertEquals('home', ob_get_contents());
+
+            // Test the /hello/bramus route
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/foo';
+            $router->run();
+            $this->assertEquals('route not found', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function test404WithClassAtMethod()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/', function () {
+                echo 'home';
+            });
+
+            $router->set404('Handler@notFound');
+
+            // Test the /hello route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/';
+            $router->run();
+            $this->assertEquals('home', ob_get_contents());
+
+            // Test the /hello/bramus route
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/foo';
+            $router->run();
+            $this->assertEquals('route not found', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function test404WithClassAtStaticMethod()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/', function () {
+                echo 'home';
+            });
+
+            $router->set404('Handler@notFound');
 
             // Test the /hello route
             ob_start();
