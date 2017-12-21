@@ -358,26 +358,7 @@ class Router
                 }, $matches, array_keys($matches));
 
                 // Call the handling function with the URL parameters if the desired input is callable
-                if (is_callable($route['fn'])) {
-                    call_user_func_array($route['fn'], $params);
-                } // If not, check the existence of special parameters
-                elseif (stripos($route['fn'], '@') !== false) {
-                    // Explode segments of given route
-                    list($controller, $method) = explode('@', $route['fn']);
-                    // Adjust controller class if namespace has been set
-                    if ($this->getNamespace() !== '') {
-                        $controller = $this->getNamespace().'\\'.$controller;
-                    }
-                    // Check if class exists, if not just ignore and check if the class exists on the default namespace
-                    if (class_exists($controller)) {
-                        // First check if is a static method, directly trying to invoke it.
-                        // If isn't a valid static method, we will try as a normal method invocation.
-                        if (call_user_func_array(array(new $controller(), $method), $params) === false) {
-                            // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
-                            if (forward_static_call_array(array($controller, $method), $params) === false);
-                        }
-                    }
-                }
+                $this->invoke($route['fn'], $params);
 
                 ++$numHandled;
 
@@ -390,6 +371,29 @@ class Router
 
         // Return the number of routes handled
         return $numHandled;
+    }
+
+    private function invoke($fn, $params = array()) {
+        if (is_callable($fn)) {
+            call_user_func_array($fn, $params);
+        } // If not, check the existence of special parameters
+        elseif (stripos($fn, '@') !== false) {
+            // Explode segments of given route
+            list($controller, $method) = explode('@', $fn);
+            // Adjust controller class if namespace has been set
+            if ($this->getNamespace() !== '') {
+                $controller = $this->getNamespace().'\\'.$controller;
+            }
+            // Check if class exists, if not just ignore and check if the class exists on the default namespace
+            if (class_exists($controller)) {
+                // First check if is a static method, directly trying to invoke it.
+                // If isn't a valid static method, we will try as a normal method invocation.
+                if (call_user_func_array(array(new $controller(), $method), $params) === false) {
+                    // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
+                    if (forward_static_call_array(array($controller, $method), $params) === false);
+                }
+            }
+        }
     }
 
     /**
