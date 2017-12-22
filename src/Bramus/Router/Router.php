@@ -429,4 +429,14 @@ class Router
 
         return $this->serverBasePath;
     }
+
+    /**
+     * Set a custom base path.
+     *
+     * @param string $path The base path.
+     */
+    protected function setBasePath($path)
+    {
+		$this->serverBasePath = $path;
+    }
 }
