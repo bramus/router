@@ -227,6 +227,11 @@ $router->set404(function() {
 });
 ```
 
+Or using `$router->set404('Class@Method');`
+```php
+$router->set404('\App\Controllers\Error@notFound');
+```
+
 The 404 will be executed when no route pattern was matched to the current URL.
 
 
