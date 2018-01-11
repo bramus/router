@@ -64,6 +64,7 @@ class Router
             $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
+                'namespace' => $this->getNamespace(),
             );
         }
     }
@@ -84,6 +85,7 @@ class Router
             $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
+                'namespace' => $this->getNamespace(),
             );
         }
     }
@@ -358,7 +360,7 @@ class Router
                 }, $matches, array_keys($matches));
 
                 // Call the handling function with the URL parameters if the desired input is callable
-                $this->invoke($route['fn'], $params);
+                $this->invoke($route['fn'], $route['namespace'], $params);
 
                 ++$numHandled;
 
@@ -373,7 +375,7 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = array()) {
+    private function invoke($fn, $namespace = '', $params = array()) {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
         } // If not, check the existence of special parameters
@@ -381,8 +383,8 @@ class Router
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
             // Adjust controller class if namespace has been set
-            if ($this->getNamespace() !== '') {
-                $controller = $this->getNamespace().'\\'.$controller;
+            if ($namespace !== '') {
+                $controller = $namespace.'\\'.$controller;
             }
             // Check if class exists, if not just ignore and check if the class exists on the default namespace
             if (class_exists($controller)) {
