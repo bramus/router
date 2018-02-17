@@ -401,19 +401,28 @@ class Router
      *
      * @return string
      */
-    protected function getCurrentUri()
-    {
-        // Get the current Request URI and remove rewrite base path from it (= allows one to run the router in a sub folder)
-        $uri = substr($_SERVER['REQUEST_URI'], strlen($this->getBasePath()));
-
-        // Don't take query params into account on the URL
-        if (strstr($uri, '?')) {
-            $uri = substr($uri, 0, strpos($uri, '?'));
-        }
-
-        // Remove trailing slash + enforce a slash at the start
-        return '/'.trim($uri, '/');
-    }
+	protected
+	function getCurrentUri()
+	{
+		// Check if not empty
+		if ( !isset( $_SERVER['REQUEST_URI'] ) )
+		{
+			//set to root e.g. google.de/
+			$_SERVER['REQUEST_URI'] = '/';
+		}
+		
+		$uri = $_SERVER['REQUEST_URI'];
+  
+		// Don't take query params into account on the URL
+        // Type Safe and only one call
+		if ( false !== ($pos = strpos( $uri, '?' ))  )
+		{
+			$uri = substr( $uri, 0, $pos );
+		}
+		
+		// enforce a slash at the start
+		return '/'.ltrim( $uri, '/' );
+	}
 
     /**
      * Return server base Path, and define it if isn't defined.
