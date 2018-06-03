@@ -223,15 +223,15 @@ class Router
     public function getRequestMethod()
     {
         // Take the method as found in $_SERVER
-        $method = $_SERVER['REQUEST_METHOD'];
+        $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 
         // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
         // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        if ($method == 'HEAD') {
             ob_start();
             $method = 'GET';
         } // If it's a POST request, check for a method override header
-        elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        elseif ($method == 'POST') {
             $headers = $this->getRequestHeaders();
             if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
                 $method = $headers['X-HTTP-Method-Override'];
@@ -291,7 +291,8 @@ class Router
             if ($this->notFoundCallback) {
                 $this->invoke($this->notFoundCallback);
             } else {
-                header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
+                $serverProtocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1';
+                header($serverProtocol . ' 404 Not Found');
             }
         } // If a route was handled, perform the finish callback (if any)
         else {
@@ -301,7 +302,7 @@ class Router
         }
 
         // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        if ($this->getRequestMethod() == 'HEAD') {
             ob_end_clean();
         }
 
@@ -403,8 +404,17 @@ class Router
      */
     protected function getCurrentUri()
     {
+        $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : null;
+        if (! $uri) {
+            $uri = '/';
+            if (isset($_SERVER['argc']) && $_SERVER['argc'] > 0) {
+                if (isset($_SERVER['argv'][1])) {
+                    $uri = $_SERVER['argv'][1];
+                }
+            }
+        }
         // Get the current Request URI and remove rewrite base path from it (= allows one to run the router in a sub folder)
-        $uri = substr($_SERVER['REQUEST_URI'], strlen($this->getBasePath()));
+        $uri = substr($uri, strlen($this->getBasePath()));
 
         // Don't take query params into account on the URL
         if (strstr($uri, '?')) {
