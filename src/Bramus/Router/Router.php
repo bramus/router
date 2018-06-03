@@ -410,6 +410,7 @@ class Router
             if (isset($_SERVER['argc']) && $_SERVER['argc'] > 0) {
                 if (isset($_SERVER['argv'][1])) {
                     $uri = $_SERVER['argv'][1];
+                    $uri = '/' . trim($uri, '/');
                 }
             }
         }
