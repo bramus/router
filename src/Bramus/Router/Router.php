@@ -378,6 +378,7 @@ class Router
             call_user_func_array($fn, $params);
         } // If not, check the existence of special parameters
         elseif (stripos($fn, '@') !== false) {
+
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
             // Adjust controller class if namespace has been set
@@ -386,6 +387,8 @@ class Router
             }
             // Check if class exists, if not just ignore and check if the class exists on the default namespace
             if (class_exists($controller)) {
+                $params = $this->getDI($controller, $method, $params);
+
                 // First check if is a static method, directly trying to invoke it.
                 // If isn't a valid static method, we will try as a normal method invocation.
                 if (call_user_func_array(array(new $controller(), $method), $params) === false) {
@@ -428,5 +431,53 @@ class Router
         }
 
         return $this->serverBasePath;
+    }
+
+    /**
+     * @param string $controller
+     * @param string $method
+     * @param array $params
+     * @return \ReflectionParameter[]
+     * @throws \ReflectionException
+     */
+    private function getDI($controller, $method, $params)
+    {
+        $reflectionMethod = new \ReflectionMethod($controller, $method);
+        $parameters = $reflectionMethod->getParameters();
+
+        $counter = 0;
+        foreach ($parameters as $key => $parameter) {
+            if ($class = $parameter->getClass()) {
+                $parameters[$key] = $this->createArgument($class);
+            } else {
+                $parameters[$key] = $params[$counter];
+                $counter++;
+            }
+        }
+        return $parameters;
+    }
+
+    /**
+     * @param \ReflectionClass $class
+     * @return object
+     * @throws \ReflectionException
+     */
+    private function createArgument(\ReflectionClass $class)
+    {
+        $className = $class->getName();
+
+        if ($constructor = $class->getConstructor()) {
+            $classArguments = $class->getConstructor()->getParameters();
+            $argumentsObjects = array();
+            foreach ($classArguments as $classArgument) {
+                if ($classArgumentClass = $classArgument->getClass()) {
+                    $argumentsObjects[] = $this->createArgument($classArgumentClass);
+                }
+            }
+
+            $reflector = new \ReflectionClass($className);
+            return $reflector->newInstanceArgs($argumentsObjects);
+        }
+        return new $className();
     }
 }
