@@ -134,6 +134,22 @@ $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
 });
 ```
 
+If you don't want to do any regex pattern matchining for route patterns, you can – alternatively – use _“placeholders”_ for them. Placeholders are strings surrounded by curly braces, e.g. `{name}`. You don't need to add parens around placeholders.
+
+```php
+$router->get('/movies/{movieId}/photos/{photoId}', function($movieId, $photoId) {
+    echo 'Movie #' . $movieId . ', photo #' . $photoId);
+});
+```
+
+Note: the name of the placeholder does not need to match with the name of the parameter that is passed into the route handling function:
+
+```php
+$router->get('/movies/{foo}/photos/{bar}', function($movieId, $photoId) {
+    echo 'Movie #' . $movieId . ', photo #' . $photoId);
+});
+```
+
 
 ### Optional Route Subpatterns
 
