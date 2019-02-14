@@ -272,6 +272,60 @@ namespace {
             ob_end_clean();
         }
 
+        public function testCurlyBracesWithCyrillicCharacters()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/bg/{arg}', function ($arg) {
+                echo 'BG: '.$arg;
+            });
+
+            // Test the /hello/bramus route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/bg/това';
+            $router->run();
+            $this->assertEquals('BG: това', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function testCurlyBracesWithMultipleCyrillicCharacters()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/bg/{arg}/{arg}', function ($arg1, $arg2) {
+                echo 'BG: '.$arg1.' - '.$arg2;
+            });
+
+            // Test the /hello/bramus route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/bg/това/слъг';
+            $router->run();
+            $this->assertEquals('BG: това - слъг', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function testCurlyBracesWithEmoji()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/emoji/{emoji}', function ($emoji) {
+                echo 'Emoji: '.$emoji;
+            });
+
+            // Test the /hello/bramus route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/emoji/💩';
+            $router->run();
+            $this->assertEquals('Emoji: 💩', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
         public function testDynamicRouteWithOptionalSubpatterns()
         {
             // Create Router
