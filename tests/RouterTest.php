@@ -272,6 +272,60 @@ namespace {
             ob_end_clean();
         }
 
+        public function testCurlyBracesRoutesWithNonAZCharsInPlaceholderNames()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/hello/{arg1}/{arg2}', function ($arg1, $arg2) {
+                echo 'Hello '.$arg1.' '.$arg2;
+            });
+
+            // Test the /hello/bramus route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
+            $router->run();
+            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function testCurlyBracesRoutesWithCyrillicCharactersInPlaceholderNames()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/hello/{това}/{това}', function ($arg1, $arg2) {
+                echo 'Hello '.$arg1.' '.$arg2;
+            });
+
+            // Test the /hello/bramus route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
+            $router->run();
+            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function testCurlyBracesRoutesWithEmojiInPlaceholderNames()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/hello/{😂}/{😅}', function ($arg1, $arg2) {
+                echo 'Hello '.$arg1.' '.$arg2;
+            });
+
+            // Test the /hello/bramus route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
+            $router->run();
+            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
         public function testCurlyBracesWithCyrillicCharacters()
         {
             // Create Router
