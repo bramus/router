@@ -99,9 +99,11 @@ Note: Routes must be hooked before `$router->run();` is being called.
 
 Route patterns can be static or dynamic.
 - __Static Route Patterns__ are essentially URIs, e.g. `/about`.
-- __Dynamic Route Patterns__ are Perl-compatible regular expressions (PCRE) that resemble URIs, e.g. `/movies/(\d+)`
+- __Dynamic Route Patterns__ are Perl-compatible regular expressions (PCRE) that resemble URIs (e.g. `/movies/(\d+)`) or URIs with _placeholders_ (e.g. `/movies/{id}`)
 
-Commonly used subpatterns within Dynamic Route Patterns are:
+#### Dynamic PCRE-based Route Patterns
+
+Commonly used PCRE-based subpatterns within Dynamic Route Patterns are:
 - `\d+` = One or more digits (0-9)
 - `\w+` = One or more word characters (a-z 0-9 _)
 - `[a-z0-9_-]+` = One or more word characters (a-z 0-9 _) and the dash (-)
@@ -134,7 +136,11 @@ $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
 });
 ```
 
-If you don't want to do any regex pattern matchining for route patterns, you can – alternatively – use _“placeholders”_ for them. Placeholders are strings surrounded by curly braces, e.g. `{name}`. You don't need to add parens around placeholders.
+#### Dynamic Placeholder-based Route Patterns
+
+If you don't want to do any regex pattern matchining for route patterns, you can – alternatively – use the more easy _“placeholders”_. Placeholders are strings surrounded by curly braces, e.g. `{name}`. You don't need to add parens around placeholders.
+
+Placeholders are easier to use than PRCEs, but offer you less control as they internally get translated to a PRCE that matches any character (`.*`).
 
 ```php
 $router->get('/movies/{movieId}/photos/{photoId}', function($movieId, $photoId) {
