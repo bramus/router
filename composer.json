@@ -21,5 +21,8 @@
     },
     "autoload": {
         "psr-0": {"Bramus": "src/"}
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit --colors=always"
     }
 }
