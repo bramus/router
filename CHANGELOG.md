@@ -14,7 +14,7 @@
 
 ## 1.3 – 2017.12.21
 
-- Added: Support ‘Class@method’ callbacks in `set404()` _(@bramus)_
+- Added: Support `Class@method` callbacks in `set404()` _(@bramus)_
 - Changed: Refactored callback invocation _(@bramus)_
 - Changed: Documentation Improvements _(@artyuum)_
 
@@ -43,8 +43,7 @@
 
 - First 1.x release
 
-## _(Unversioned Releases)_
- – 2013.04.08 - 2015.02.04
+## _(Unversioned Releases)_ – 2013.04.08 - 2015.02.04
 
 - Initial release with suppport for:
 	- Static and Dynamic Route Handling
