@@ -41,7 +41,7 @@ class Router
     /**
      * @var string The Server Base Path for Router Execution
      */
-    private $serverBasePath;
+    private $serverBasePath = '/';
 
     /**
      * @var string Default Controllers Namespace
@@ -421,12 +421,8 @@ class Router
      * @return string
      */
     protected function getBasePath()
-    {
-        // Check if server base path is defined, if not define it.
-        if ($this->serverBasePath === null) {
-            $this->serverBasePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)).'/';
-        }
-
+    {   
+        // Return base path
         return $this->serverBasePath;
     }
 }
