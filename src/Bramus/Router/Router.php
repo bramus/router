@@ -444,7 +444,7 @@ class Router
 
             # Check if class exsist
             if(!class_exists($controller)){
-                throw new \ErrorException("Bramus\Router: class '{$context['controller']}' was not found" 0);
+                throw new \ErrorException("Bramus\Router: class '{$context['controller']}' was not found", 0);
                 return;
             }
 
