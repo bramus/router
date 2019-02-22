@@ -53,6 +53,7 @@ class Router
      * Parse a pattern
      *
      * @param string $pattern A route pattern such as /about/system
+     *
      * @return string
      */
     private function parsePattern(String $pattern){
@@ -67,6 +68,8 @@ class Router
      * @param string          $methods Allowed methods, | delimited
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function before(String $methods, String $pattern, $fn)
     {
@@ -87,6 +90,8 @@ class Router
      * @param string          $methods Allowed methods, | delimited
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function match(String $methods, String $pattern, $fn)
     {
@@ -105,6 +110,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function all(String $pattern, $fn)
     {
@@ -116,6 +123,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function get(String $pattern, $fn)
     {
@@ -127,6 +136,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function post(String $pattern, $fn)
     {
@@ -138,6 +149,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function patch(String $pattern, $fn)
     {
@@ -149,6 +162,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function delete(String $pattern, $fn)
     {
@@ -160,6 +175,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function put(String $pattern, $fn)
     {
@@ -171,6 +188,8 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     *
+     * @return void
      */
     public function options(String $pattern, $fn)
     {
@@ -182,6 +201,8 @@ class Router
      *
      * @param string   $baseRoute The route sub pattern to mount the callbacks on
      * @param callable $fn        The callback method
+     *
+     * @return void
      */
     public function mount(String $baseRoute, $fn)
     {
@@ -265,6 +286,8 @@ class Router
      * Set a Default Lookup Namespace for Callable methods.
      *
      * @param string $namespace A given namespace
+     *
+     * @return void
      */
     public function setNamespace(String $namespace)
     {
@@ -333,6 +356,8 @@ class Router
      * Set the 404 handling function.
      *
      * @param object|callable $fn The function to be executed
+     *
+     * @return void
      */
     public function set404($fn)
     {
