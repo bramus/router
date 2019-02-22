@@ -7,6 +7,7 @@
  */
 
 namespace Bramus\Router;
+use \ErrorException;
 
 /**
  * Router Class
@@ -380,13 +381,12 @@ class Router
 
             ++$routesHandled;
 
-            # If we need to quit, then quit
+            # Quit after a match was found
             if ($quitAfterMatch) {
                 break;
             }
         }
 
-        # Return the number of routes handled
         return $routesHandled;
     }
 
@@ -406,7 +406,7 @@ class Router
             return true;
         } 
 
-        # Check the existence of special parameters
+        # Check if we need to call a method
         if (stripos($fn, '@') !== false) {
 
             # Explode segments of given route
@@ -423,7 +423,17 @@ class Router
             }
 
             # Call method
-            @call_user_func_array([new $controller(), $method], $params);
+            set_error_handler(function($level, $msg, $file, $line, Array $context){
+                if (0 === error_reporting()) {
+                    // Error suppressed
+                    return false;
+                }
+                if(substr($msg, 0, 65) === 'call_user_func_array() expects parameter 1 to be a valid callback'){
+                    throw new \ErrorException("Bramus\Router: class '{$context['controller']}' does not have a method '{$context['method']}'", 0, $level, $file, $line);
+                }
+            }, E_WARNING);
+            call_user_func_array([new $controller(), $method], $params);
+            restore_error_handler();
 
             return true;
         }else{
@@ -433,7 +443,7 @@ class Router
     }
 
     /**
-     * Define the current relative URI.
+     * Remove query parameters and rewrite base from Request URI and return it
      *
      * @return string
      */
