@@ -49,6 +49,26 @@ class Router
     private $namespace = '';
 
     /**
+    * @var bool If true it shows the return of the call
+    */
+    private $outputReturn = false;
+
+    public function setReturnOutput(bool $output)
+    {
+
+        $this->outputReturn = $output;
+
+    }
+
+    public function isReturnEnabled() 
+    {
+
+        return $this->outputReturn;
+
+    }
+
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
      *
      * @param string          $methods Allowed methods, | delimited
@@ -375,7 +395,10 @@ class Router
 
     private function invoke($fn, $params = array()) {
         if (is_callable($fn)) {
-            call_user_func_array($fn, $params);
+
+            $call = call_user_func_array($fn, $params);
+            if($this->isReturnEnabled()) echo $call;
+
         } // If not, check the existence of special parameters
         elseif (stripos($fn, '@') !== false) {
             // Explode segments of given route
@@ -388,10 +411,13 @@ class Router
             if (class_exists($controller)) {
                 // First check if is a static method, directly trying to invoke it.
                 // If isn't a valid static method, we will try as a normal method invocation.
-                if (call_user_func_array(array(new $controller(), $method), $params) === false) {
-                    // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
+                $call = call_user_func_array(array(new $controller(), $method), $params);
+                if($this->isReturnEnabled()) echo $call;
+
+                if ($call === false) {
                     if (forward_static_call_array(array($controller, $method), $params) === false);
                 }
+
             }
         }
     }

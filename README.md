@@ -236,6 +236,15 @@ If most/all of your handling classes are in one and the same namespace, you can 
 $router->setNamespace('\App\Controllers');
 $router->get('/users/(\d+)', 'User@showProfile');
 $router->get('/cars/(\d+)', 'Car@showProfile');
+
+```
+
+### Display
+
+If you need display the return of method or function, you can use this:
+
+```php
+$router->setReturnOutput(true);
 ```
 
 ### Custom 404
