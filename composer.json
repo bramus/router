@@ -17,12 +17,15 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~4.0",
-        "phpunit/php-code-coverage": "~2.0"
+        "phpunit/php-code-coverage": "~2.0",
+        "friendsofphp/php-cs-fixer": "~2.14"
     },
     "autoload": {
         "psr-0": {"Bramus": "src/"}
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit --colors=always"
+        "test": "./vendor/bin/phpunit --colors=always",
+        "lint": "php-cs-fixer fix --diff --dry-run",
+        "fix": "php-cs-fixer fix"
     }
 }
