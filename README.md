@@ -8,18 +8,18 @@ Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [
 
 ## Features
 
-- Static Route Patterns
-- Dynamic Route Patterns
-- Optional Route Subpatterns
 - Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` and `HEAD` request methods
-- Supports `X-HTTP-Method-Override` header
-- Subrouting
-- Allowance of `Class@Method` calls
-- Custom 404 handling
-- Before Route Middlewares
-- Before Router Middlewares
-- After Router Middleware (Finish Callback)
-- Works fine in subfolders
+- [Static Route Patterns](#route-patterns)
+- Dynamic Route Patterns: [Dynamic PCRE-based Route Patterns](#dynamic-pcre-based-route-patterns) or [Dynamic Placeholder-based Route Patterns](#dynamic-placeholder-based-route-patterns))
+- [Optional Route Subpatterns](#optional-route-subpatterns)
+- [Supports `X-HTTP-Method-Override` header](#overriding-the-request-method)
+- [Subrouting / Mounting Routes](#subrouting--mounting-routes)
+- [Allowance of `Class@Method` calls](#classmethod-calls)
+- [Custom 404 handling](#custom-404)
+- [Before Route Middlewares](#before-route-middlewares)
+- [Before Router Middlewares / Before App Middlewares](#before-router-middlewares)
+- [After Router Middleware / After App Middleware (Finish Callback)](#after-router-middleware--run-callback)
+- [Works fine in subfolders](#subfolder-support)
 
 
 
@@ -75,7 +75,7 @@ $router->match('GET|POST', 'pattern', function() { … });
 
 `bramus/router` supports `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` HTTP request methods. Pass in a single request method, or multiple request methods separated by `|`.
 
-When a route matches, the attached __route handling function__ will be executed. The route handling function must be a [callable](http://php.net/manual/en/language.types.callable.php). Only the first route matched will be handled. When no matching route is found, an `'HTTP/1.1 404 Not Found'` status code will be returned.
+When a route matches against the current URL (e.g. `$_SERVER['REQUEST_URI']`), the attached __route handling function__ will be executed. The route handling function must be a [callable](http://php.net/manual/en/language.types.callable.php). Only the first route matched will be handled. When no matching route is found, a 404 handler will be executed.
 
 Shorthands for single request methods are provided:
 
@@ -97,13 +97,40 @@ Note: Routes must be hooked before `$router->run();` is being called.
 
 ### Route Patterns
 
-Route patterns can be static or dynamic.
-- __Static Route Patterns__ are essentially URIs, e.g. `/about`.
-- __Dynamic Route Patterns__ are Perl-compatible regular expressions (PCRE) that resemble URIs (e.g. `/movies/(\d+)`) or URIs with _placeholders_ (e.g. `/movies/{id}`)
+Route Patterns can be static or dynamic:
+
+- __Static Route Patterns__ contain no dynamic parts and must match exactly against the `path` part of the current URL.
+- __Dynamic Route Patterns__ contain dynamic parts that can vary per request. The varying parts are named __subpatterns__ and are defined using either Perl-compatible regular expressions (PCRE) or by using __placeholders__
+
+#### Static Route Patterns
+
+A static route pattern is a regular string representing a URI. It will be compared directly against the `path` part of the current URL.
+
+Examples:
+
+-  `/about`
+-  `/contact`
+
+Usage Examples:
+
+```php
+// This route handling function will only be executed when visiting http(s)://www.example.org/about
+$router->get('/about', function($name) {
+    echo 'About Page Contents';
+});
+```
 
 #### Dynamic PCRE-based Route Patterns
 
+This type of Route Patterns contain dynamic parts which can vary per request. The varying parts are named __subpatterns__ and are defined using regular expressions.
+
+Examples:
+
+- `/movies/(\d+)`
+- `/profile/(\w+)`
+
 Commonly used PCRE-based subpatterns within Dynamic Route Patterns are:
+
 - `\d+` = One or more digits (0-9)
 - `\w+` = One or more word characters (a-z 0-9 _)
 - `[a-z0-9_-]+` = One or more word characters (a-z 0-9 _) and the dash (-)
@@ -112,7 +139,7 @@ Commonly used PCRE-based subpatterns within Dynamic Route Patterns are:
 
 Note: The [PHP PCRE Cheat Sheet](https://www.cs.washington.edu/education/courses/190m/12sp/cheat-sheets/php-regex-cheat-sheet.pdf) might come in handy.
 
-The __subpatterns__ defined in Dynamic Route Patterns are converted to parameters which are passed into the route handling function. Prerequisite is that these subpatterns need to be defined as __parenthesized subpatterns__, which means that they should be wrapped between parens:
+The __subpatterns__ defined in Dynamic PCRE-based Route Patterns are converted to parameters which are passed into the route handling function. Prerequisite is that these subpatterns need to be defined as __parenthesized subpatterns__, which means that they should be wrapped between parens:
 
 ```php
 // Bad
@@ -128,7 +155,7 @@ $router->get('/hello/(\w+)', function($name) {
 
 Note: The leading `/` at the very beginning of a route pattern is not mandatory, but is recommended.
 
-When multiple subpatterns are defined, they resulting __route handling parameters__ are passed into the route handling function in the order they are defined in:
+When multiple subpatterns are defined, the resulting __route handling parameters__ are passed into the route handling function in the order they are defined in:
 
 ```php
 $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
@@ -138,7 +165,12 @@ $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
 
 #### Dynamic Placeholder-based Route Patterns
 
-If you don't want to do any regex pattern matchining for route patterns, you can – alternatively – use the more easy _“placeholders”_. Placeholders are strings surrounded by curly braces, e.g. `{name}`. You don't need to add parens around placeholders.
+This type of Route Patterns are the same as __Dynamic PCRE-based Route Patterns__, but with one difference: they don't use regexes to do the pattern matching but they use the more easy __placeholders__ instead. Placeholders are strings surrounded by curly braces, e.g. `{name}`. You don't need to add parens around placeholders.
+
+Examples:
+
+- `/movies/{id}`
+- `/profile/{username}`
 
 Placeholders are easier to use than PRCEs, but offer you less control as they internally get translated to a PRCE that matches any character (`.*`).
 
@@ -230,6 +262,8 @@ $router->get('/(\d+)', '\App\Controllers\User@showProfile');
 
 When a request matches the specified route URI, the `showProfile` method on the `User` class will be executed. The defined route parameters will be passed to the class method.
 
+The method can be static or non-static. In case of a non-static method, a new instance of the class will be created.
+
 If most/all of your handling classes are in one and the same namespace, you can set the default namespace to use on your router instance via `setNamespace()`
 
 ```php
@@ -240,7 +274,7 @@ $router->get('/cars/(\d+)', 'Car@showProfile');
 
 ### Custom 404
 
-Override the default 404 handler using `$router->set404(function);`
+The default 404 handler sets a 404 status code and exits. You can override this default 404 handler by using `$router->set404(callable);`
 
 ```php
 $router->set404(function() {
@@ -249,12 +283,13 @@ $router->set404(function() {
 });
 ```
 
-Or using `$router->set404('Class@Method');`
+Also supported are `Class@Method` callables:
+
 ```php
 $router->set404('\App\Controllers\Error@notFound');
 ```
 
-The 404 will be executed when no route pattern was matched to the current URL.
+The 404 handler will be executed when no route pattern was matched to the current URL.
 
 
 ### Before Route Middlewares
@@ -322,6 +357,23 @@ $router->run(function() use ($tpl) {
 ```
 
 Given this structure it is still possible to manipulate the output from within the After Router Middleware
+
+
+### Subfolder support
+
+Out-of-the box `bramus/router` will run in any (sub)folder you place it into … no adjustments in your code are needed: you can move your `index.php` file around freely and the router will adapt itself to work relatively from that new path/URL.
+
+Say you have a router `public_html/a-directory/index.php`, then the code below will respond to `https://www.example.org/a-directory/any-route`:
+
+```php
+$router->get('/any-route', function() {
+    echo 'Something';
+});
+```
+
+If you were to move this file to `public_html/another-directory/some/sub/folder/index.php` then it'll adapt itself and start responding to `https://www.example.org/another-directory/sub/folder/any-route`.
+
+There's **no** need for `$router->mount(…)` in this case. The only thing you might need to adjust is the path to [Composer's autoloader](https://getcomposer.org/doc/01-basic-usage.md#autoloading).
 
 
 ## A note on working with PUT
