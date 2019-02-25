@@ -183,7 +183,7 @@ The code snipped above unfortunately also responds to URLs like `/blog/foo` and 
 ```php
 $router->get('/blog(/\d+(/\d+(/\d+(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
     // ...
-}
+});
 ```
 
 Note: It is highly recommended to __always__ define successive optional parameters.
@@ -193,7 +193,7 @@ To make things complete use [quantifiers](http://www.php.net/manual/en/regexp.re
 ```php
 $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year = null, $month = null, $day = null, $slug = null) {
     // ...
-}
+});
 ```
 
 
