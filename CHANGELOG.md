@@ -1,5 +1,9 @@
 # Changelog for `bramus/router`
 
+## 1.next – ????.??.??
+
+- Changed: Changed visibility of `getBasePath` and `getCurrentUri` to being `public` _(@bramus)_
+
 ## 1.4 – 2019.02.18
 
 - Added: Support for Cyrillic chars and Emoji in placeholder values and placeholder names _(@bramus)_
