@@ -48,18 +48,22 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
     $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function ($year = null, $month = null, $day = null, $slug = null) {
         if (!$year) {
             echo 'Blog overview';
+
             return;
         }
         if (!$month) {
             echo 'Blog year overview (' . $year . ')';
+
             return;
         }
         if (!$day) {
             echo 'Blog month overview (' . $year . '-' . $month . ')';
+
             return;
         }
         if (!$slug) {
             echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')';
+
             return;
         }
         echo 'Blogpost ' . htmlentities($slug) . ' detail (' . $year . '-' . $month . '-' . $day . ')';
@@ -87,7 +91,6 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
         $router->put('/(\d+)', function ($id) {
             echo 'Update movie id ' . htmlentities($id);
         });
-
     });
 
     // Thunderbirds are go!

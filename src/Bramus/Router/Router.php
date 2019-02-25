@@ -5,7 +5,6 @@
  * @copyright   Copyright (c), 2013 Bram(us) Van Damme
  * @license     MIT public license
  */
-
 namespace Bramus\Router;
 
 /**
@@ -16,12 +15,12 @@ class Router
     /**
      * @var array The route patterns and their handling functions
      */
-    private $afterRoutes = array();
+    private $afterRoutes = [];
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
-    private $beforeRoutes = array();
+    private $beforeRoutes = [];
 
     /**
      * @var object|callable The function to be executed when no route has been matched
@@ -57,14 +56,14 @@ class Router
      */
     public function before($methods, $pattern, $fn)
     {
-        $pattern = $this->baseRoute.'/'.trim($pattern, '/');
+        $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->beforeRoutes[$method][] = array(
+            $this->beforeRoutes[$method][] = [
                 'pattern' => $pattern,
                 'fn' => $fn,
-            );
+            ];
         }
     }
 
@@ -77,14 +76,14 @@ class Router
      */
     public function match($methods, $pattern, $fn)
     {
-        $pattern = $this->baseRoute.'/'.trim($pattern, '/');
+        $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->afterRoutes[$method][] = array(
+            $this->afterRoutes[$method][] = [
                 'pattern' => $pattern,
                 'fn' => $fn,
-            );
+            ];
         }
     }
 
@@ -193,7 +192,7 @@ class Router
      */
     public function getRequestHeaders()
     {
-        $headers = array();
+        $headers = [];
 
         // If getallheaders() is available, use that
         if (function_exists('getallheaders')) {
@@ -208,7 +207,7 @@ class Router
         // Method getallheaders() not available or went wrong: manually extract 'm
         foreach ($_SERVER as $name => $value) {
             if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                $headers[str_replace([' ', 'Http'], ['-', 'HTTP'], ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
             }
         }
 
@@ -230,10 +229,12 @@ class Router
         if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
             ob_start();
             $method = 'GET';
-        } // If it's a POST request, check for a method override header
+        }
+
+        // If it's a POST request, check for a method override header
         elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $headers = $this->getRequestHeaders();
-            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
+            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
                 $method = $headers['X-HTTP-Method-Override'];
             }
         }
@@ -291,7 +292,7 @@ class Router
             if ($this->notFoundCallback) {
                 $this->invoke($this->notFoundCallback);
             } else {
-                header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
+                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
             }
         } // If a route was handled, perform the finish callback (if any)
         else {
@@ -341,7 +342,7 @@ class Router
             $route['pattern'] = preg_replace('/\/{(.*?)}/', '/(.*?)', $route['pattern']);
 
             // we have a match!
-            if (preg_match_all('#^'.$route['pattern'].'$#', $uri, $matches, PREG_OFFSET_CAPTURE)) {
+            if (preg_match_all('#^' . $route['pattern'] . '$#', $uri, $matches, PREG_OFFSET_CAPTURE)) {
                 // Rework matches to only contain the matches, not the orig string
                 $matches = array_slice($matches, 1);
 
@@ -352,9 +353,8 @@ class Router
                     if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
                         return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
                     } // We have no following parameters: return the whole lot
-                    else {
-                        return isset($match[0][0]) ? trim($match[0][0], '/') : null;
-                    }
+
+                    return isset($match[0][0]) ? trim($match[0][0], '/') : null;
                 }, $matches, array_keys($matches));
 
                 // Call the handling function with the URL parameters if the desired input is callable
@@ -373,24 +373,27 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = array()) {
+    private function invoke($fn, $params = [])
+    {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
-        } // If not, check the existence of special parameters
+        }
+
+        // If not, check the existence of special parameters
         elseif (stripos($fn, '@') !== false) {
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
             // Adjust controller class if namespace has been set
             if ($this->getNamespace() !== '') {
-                $controller = $this->getNamespace().'\\'.$controller;
+                $controller = $this->getNamespace() . '\\' . $controller;
             }
             // Check if class exists, if not just ignore and check if the class exists on the default namespace
             if (class_exists($controller)) {
                 // First check if is a static method, directly trying to invoke it.
                 // If isn't a valid static method, we will try as a normal method invocation.
-                if (call_user_func_array(array(new $controller(), $method), $params) === false) {
+                if (call_user_func_array([new $controller(), $method], $params) === false) {
                     // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
-                    if (forward_static_call_array(array($controller, $method), $params) === false);
+                    if (forward_static_call_array([$controller, $method], $params) === false);
                 }
             }
         }
@@ -412,7 +415,7 @@ class Router
         }
 
         // Remove trailing slash + enforce a slash at the start
-        return '/'.trim($uri, '/');
+        return '/' . trim($uri, '/');
     }
 
     /**
@@ -424,7 +427,7 @@ class Router
     {
         // Check if server base path is defined, if not define it.
         if ($this->serverBasePath === null) {
-            $this->serverBasePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)).'/';
+            $this->serverBasePath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
         }
 
         return $this->serverBasePath;
@@ -436,7 +439,8 @@ class Router
      *
      * @param string
      */
-    public function setBasePath($serverBasePath) {
+    public function setBasePath($serverBasePath)
+    {
         $this->serverBasePath = $serverBasePath;
     }
 }
