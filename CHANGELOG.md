@@ -2,6 +2,7 @@
 
 ## 1.next – ????.??.??
 
+- Added: Make `bramus/router` play nice with situations where the entry script and entry URLs are not coupled (see [#82](https://github.com/bramus/router/issues/82#issuecomment-466956078)) _(@bramus)_
 - Changed: Changed visibility of `getBasePath` and `getCurrentUri` to being `public` _(@bramus)_
 
 ## 1.4 – 2019.02.18

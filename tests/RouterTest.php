@@ -57,6 +57,35 @@ namespace {
             );
         }
 
+        public function testBasePathOverride()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->match('GET', '/about', function () {
+                echo 'about';
+            });
+
+            // Fake some data
+            $_SERVER['SCRIPT_NAME'] = '/public/index.php';
+            $_SERVER['REQUEST_URI'] = '/about';
+
+            $router->setBasePath('/');
+
+            $this->assertEquals(
+                '/',
+                $router->getBasePath()
+            );
+
+            // Test the /about route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/about';
+            $router->run();
+            $this->assertEquals('about', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
         public function testStaticRoute()
         {
             // Create Router

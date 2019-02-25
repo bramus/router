@@ -429,4 +429,14 @@ class Router
 
         return $this->serverBasePath;
     }
+
+    /**
+     * Explicilty sets the server base path. To be used when your entry script path differs from your entry URLs.
+     * @see https://github.com/bramus/router/issues/82#issuecomment-466956078
+     *
+     * @param string
+     */
+    public function setBasePath($serverBasePath) {
+        $this->serverBasePath = $serverBasePath;
+    }
 }
