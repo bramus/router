@@ -2,12 +2,15 @@
 
 ## 1.next – ????.??.??
 
-- Added: Make `bramus/router` play nice with situations where the entry script and entry URLs are not coupled (see [#82](https://github.com/bramus/router/issues/82#issuecomment-466956078)) _(@bramus)_
+## 1.4.1 – 2019.02.26
+
+- Fixed: Fix bug where Cyrillic charges and Emojis in placeholder were urlencoded (see [#80](https://github.com/bramus/router/issues/80#issuecomment-467154490))
+- Fixed: Make `bramus/router` play nice with situations where the entry script and entry URLs are not coupled (see [#82](https://github.com/bramus/router/issues/82#issuecomment-466956078)) _(@bramus)_
 - Changed: Changed visibility of `getBasePath` and `getCurrentUri` to being `public` _(@bramus)_
 
 ## 1.4 – 2019.02.18
 
-- Added: Support for Cyrillic chars and Emoji in placeholder values and placeholder names _(@bramus)_
+- Added: Support for Cyrillic chars and Emoji in placeholder values and placeholder names (see [#80](https://github.com/bramus/router/issues/80)) _(@bramus)_
 - Added: `composer test` shorthand _(@bramus)_
 - Added: Changelog _(@bramus)_
 - Changed: Documentation Improvements _(@bramus)_
