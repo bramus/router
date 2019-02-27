@@ -343,6 +343,37 @@ Note: If the route handling function has `exit()`ed the run callback won't be ru
 Use `X-HTTP-Method-Override` to override the HTTP Request Method. Only works when the original Request Method is `POST`. Allowed values for `X-HTTP-Method-Override` are `PUT`, `DELETE`, or `PATCH`.
 
 
+### Subfolder support
+
+Out-of-the box `bramus/router` will run in any (sub)folder you place it into … no adjustments to your code are needed. You can freely move your _entry script_ `index.php` around, and the router will automatically adapt itself to work relatively from the current folder's path by mounting all routes onto that __basePath__.
+
+Say you have a server hosting the domain `www.example.org` using `public_html/` as its document root, with this little _entry script_ `index.php`:
+
+```php
+$router->get('/', function() { echo 'Index'; });
+$router->get('/hello', function() { echo 'Hello!'; });
+```
+
+- If your were to place this file _(along with its accompanying `.htaccess` file or the like)_ at the document root level (e.g. `public_html/index.php`), `bramus/router` will mount all routes onto the domain root (e.g. `/`) and thus respond to `https://www.example.org/` and `https://www.example.org/hello`.
+
+- If you were to move this file _(along with its accompanying `.htaccess` file or the like)_ into a subfolder (e.g. `public_html/demo/index.php`), `bramus/router` will mount all routes onto the current path (e.g. `/demo`) and thus repsond to `https://www.example.org/demo` and `https://www.example.org/demo/hello`. There's **no** need for `$router->mount(…)` in this case.
+
+#### Disabling subfolder support
+
+In case you **don't** want `bramus/router` to automatically adapt itself to the folder its being placed in, it's possible to manually override the _basePath_ by calling `setBasePath()`. This is necessary in the _(uncommon)_ situation where your _entry script_ and your _entry URLs_ are not tightly coupled _(e.g. when the entry script is placed into a subfolder that does not need be part of the URLs it responds to)_.
+
+```php
+// Override auto base path detection
+$router->setBasePath('/');
+
+$router->get('/', function() { echo 'Index'; });
+$router->get('/hello', function() { echo 'Hello!'; });
+
+$router->run();
+```
+
+If you were to place this file into a subfolder (e.g. `public_html/some/sub/folder/index.php`), it will still mount the routes onto the domain root (e.g. `/`) and thus respond to `https://www.example.org/` and `https://www.example.org/hello` _(given that your `.htaccess` file – placed at the document root level – rewrites requests to it)_
+
 ## Integration with other libraries
 
 Integrate other libraries with `bramus/router` by making good use of the `use` keyword to pass dependencies into the handling functions.
@@ -363,23 +394,6 @@ $router->run(function() use ($tpl) {
 ```
 
 Given this structure it is still possible to manipulate the output from within the After Router Middleware
-
-
-### Subfolder support
-
-Out-of-the box `bramus/router` will run in any (sub)folder you place it into … no adjustments in your code are needed: you can move your `index.php` file around freely and the router will adapt itself to work relatively from that new path/URL.
-
-Say you have a router `public_html/a-directory/index.php`, then the code below will respond to `https://www.example.org/a-directory/any-route`:
-
-```php
-$router->get('/any-route', function() {
-    echo 'Something';
-});
-```
-
-If you were to move this file to `public_html/another-directory/some/sub/folder/index.php` then it'll adapt itself and start responding to `https://www.example.org/another-directory/sub/folder/any-route`.
-
-There's **no** need for `$router->mount(…)` in this case. The only thing you might need to adjust is the path to [Composer's autoloader](https://getcomposer.org/doc/01-basic-usage.md#autoloading).
 
 
 ## A note on working with PUT
