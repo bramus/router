@@ -403,7 +403,7 @@ namespace {
 
             // Test the /hello/bramus route
             ob_start();
-            $_SERVER['REQUEST_URI'] = '/emoji/💩';
+            $_SERVER['REQUEST_URI'] = '/emoji/%F0%9F%92%A9'; // 💩
             $router->run();
             $this->assertEquals('Emoji: 💩', ob_get_contents());
 
