@@ -2,6 +2,10 @@
 
 ## 1.next – ????.??.??
 
+
+
+## 1.4.2 – 2019.02.27
+
 - Fixed: Play nice with emoji in base paths ([ref](https://github.com/bramus/router/commit/8692190532db269882f83d27cea95d4f22a50da2#commitcomment-32492636), [ref](https://github.com/bramus/router/commit/492444d84fde7e54551ff0bf8ca79ff9292094da#commitcomment-32496820)) _(@bramus)_
 - Added: Extra Tests _(@bramus)_
 
