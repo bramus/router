@@ -9,6 +9,7 @@ Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [
 ## Features
 
 - Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` and `HEAD` request methods
+- [Routing shorthands such as `get()`, `post()`, `put()`, …](#routing-shorthands)
 - [Static Route Patterns](#route-patterns)
 - Dynamic Route Patterns: [Dynamic PCRE-based Route Patterns](#dynamic-pcre-based-route-patterns) or [Dynamic Placeholder-based Route Patterns](#dynamic-placeholder-based-route-patterns)
 - [Optional Route Subpatterns](#optional-route-subpatterns)
@@ -77,6 +78,8 @@ $router->match('GET|POST', 'pattern', function() { … });
 
 When a route matches against the current URL (e.g. `$_SERVER['REQUEST_URI']`), the attached __route handling function__ will be executed. The route handling function must be a [callable](http://php.net/manual/en/language.types.callable.php). Only the first route matched will be handled. When no matching route is found, a 404 handler will be executed.
 
+### Routing Shorthands
+
 Shorthands for single request methods are provided:
 
 ```php
@@ -89,11 +92,14 @@ $router->patch('pattern', function() { /* ... */ });
 ```
 
 You can use this shorthand for a route that can be accessed using any method:
+
 ```php
 $router->all('pattern', function() { … });
 ```
 
 Note: Routes must be hooked before `$router->run();` is being called.
+
+Note: There is no shorthand for `match()` as `bramus/router` will internally re-route such requrests to their equivalent `GET` request, in order to comply with RFC2616 _(see [note](#a-note-on-making-head-requests))_.
 
 ### Route Patterns
 
