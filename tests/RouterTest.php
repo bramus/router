@@ -88,6 +88,27 @@ namespace {
             ob_end_clean();
         }
 
+        public function testBasePathThatContainsEmoji()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->match('GET', '/about', function () {
+                echo 'about';
+            });
+
+            // Fake some data
+            $_SERVER['SCRIPT_NAME'] = '/sub/folder/💩/index.php';
+            $_SERVER['REQUEST_URI'] = '/sub/folder/%F0%9F%92%A9/about';
+
+            // Test the /hello/bramus route
+            ob_start();
+            $router->run();
+            $this->assertEquals('about', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
         public function testStaticRoute()
         {
             // Create Router
@@ -406,6 +427,27 @@ namespace {
             $_SERVER['REQUEST_URI'] = '/emoji/%F0%9F%92%A9'; // 💩
             $router->run();
             $this->assertEquals('Emoji: 💩', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
+        public function testCurlyBracesWithEmojiCombinedWithBasePathThatContainsEmoji()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/emoji/{emoji}', function ($emoji) {
+                echo 'Emoji: ' . $emoji;
+            });
+
+            // Fake some data
+            $_SERVER['SCRIPT_NAME'] = '/sub/folder/💩/index.php';
+            $_SERVER['REQUEST_URI'] = '/sub/folder/%F0%9F%92%A9/emoji/%F0%9F%A4%AF'; // 🤯
+
+            // Test the /hello/bramus route
+            ob_start();
+            $router->run();
+            $this->assertEquals('Emoji: 🤯', ob_get_contents());
 
             // Cleanup
             ob_end_clean();
