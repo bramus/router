@@ -9,6 +9,7 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
     // Include the Router class
     // @note: it's recommended to just use the composer autoloader when working with other packages too
     require_once __DIR__ . '/../src/Bramus/Router/Router.php';
+    require_once __DIR__ . '/../src/Bramus/Router/Attributes.php';
 
     // Create a Router
     $router = new \Bramus\Router\Router();
@@ -26,7 +27,20 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
 
     // Static route: / (homepage)
     $router->get('/', function () {
-        echo '<h1>bramus/router</h1><p>Try these routes:<p><ul><li>/hello/<em>name</em></li><li>/blog</li><li>/blog/<em>year</em></li><li>/blog/<em>year</em>/<em>month</em></li><li>/blog/<em>year</em>/<em>month</em>/<em>day</em></li><li>/movies</li><li>/movies/<em>id</em></li></ul>';
+        echo '<h1>bramus/router</h1>
+<p>Try these routes:<p>
+<ul>
+<li>/hello/<em>name</em></li>
+<li>/blog</li>
+<li>/blog/<em>year</em></li>
+<li>/blog/<em>year</em>/<em>month</em></li>
+<li>/blog/<em>year</em>/<em>month</em>/<em>day</em></li>
+<li>/movies</li>
+<li>/movies/<em>id</em></li>
+<li>/movies/<em>id</em></li>
+<li>/admin/login</li>
+<li>/admin/novel/info</li>
+</ul>';
     });
 
     // Static route: /hello
@@ -90,6 +104,17 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
         // will result in '/movies/id'
         $router->put('/(\d+)', function ($id) {
             echo 'Update movie id ' . htmlentities($id);
+        });
+    });
+
+    $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+        $router->get('/login', function () {
+            echo '/admin/login overview';
+        });
+        $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+            $router->get('info', function () {
+                echo '/novel/info overview';
+            });
         });
     });
 

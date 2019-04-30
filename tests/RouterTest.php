@@ -10,28 +10,213 @@ namespace {
         }
     }
 
+    class Test3
+    {
+        public static function test()
+        {
+            echo 'Test3 hello';
+
+            return false;
+        }
+    }
+
     class RouterTest extends PHPUnit_Framework_TestCase
     {
-        protected function setUp()
-        {
-            // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
-            $_SERVER['SCRIPT_NAME'] = '/index.php';
-
-            // Default request method to GET
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-
-            // Default SERVER_PROTOCOL method to HTTP/1.1
-            $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
-        }
-
-        protected function tearDown()
-        {
-            // nothing
-        }
-
         public function testInit()
         {
             $this->assertInstanceOf('\Bramus\Router\Router', new \Bramus\Router\Router());
+        }
+
+        public function testCloneRouter()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            ob_start();
+            // Define routes
+            $router2->prefix('/novel')->get('/info', function () {
+                echo 'yes';
+            });
+
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'yes',
+                ob_get_clean()
+            );
+        }
+
+        public function testPrefix()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $router->prefix('/novel')->get('/nothing', function () {
+                echo 'no';
+            });
+
+            ob_start();
+            $router->get('/novel/info', function () {
+                echo 'yes';
+            });
+
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'yes',
+                ob_get_clean()
+            );
+        }
+
+        public function testNs()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->get('/login', 'LoginController@login1');
+            $router->get('/login', 'LoginController@login2');
+
+            $property = new ReflectionProperty('\Bramus\Router\Router', 'attributes');
+            $property->setAccessible(true);
+            $attributes = $property->getValue($router);
+
+            $routers = $attributes->afterRoutes;
+
+            list($r1, $r2) = $routers['GET'];
+
+            $this->assertEquals('/admin/login', $r1['pattern']);
+            $this->assertEquals('Admin\\LoginController@login1', $r1['fn']);
+
+            $this->assertEquals('/login', $r2['pattern']);
+            $this->assertEquals('LoginController@login2', $r2['fn']);
+        }
+
+        public function testGroup()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+            });
+
+            $property = new ReflectionProperty('\Bramus\Router\Router', 'attributes');
+            $property->setAccessible(true);
+            $attributes = $property->getValue($router);
+
+            $routers = $attributes->afterRoutes;
+
+            list($r1) = $routers['GET'];
+
+            $this->assertEquals('/admin/login', $r1['pattern']);
+            $this->assertEquals('Admin\\LoginController@login3', $r1['fn']);
+        }
+
+        public function testSubGroup()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                });
+            });
+
+            $property = new ReflectionProperty('\Bramus\Router\Router', 'attributes');
+            $property->setAccessible(true);
+            $attributes = $property->getValue($router);
+
+            $routers = $attributes->afterRoutes;
+
+            list($r1, $r2) = $routers['GET'];
+
+            $this->assertEquals('/admin/login', $r1['pattern']);
+            $this->assertEquals('Admin\\LoginController@login3', $r1['fn']);
+
+            $this->assertEquals('/admin/novel/info', $r2['pattern']);
+            $this->assertEquals('Admin\\Novel\\NovelController@getNovelInfo', $r2['fn']);
+        }
+
+        public function testStaticMethod()
+        {
+            $_SERVER['REQUEST_URI'] = '/account';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+            $router->get('/account', 'Test3::test');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals('Test3 hello', ob_get_clean());
+        }
+
+        public function testMountRecovery()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Subrouting
+            $router->mount('/movies', function () use ($router) {
+
+                // will result in '/movies'
+                $router->get('/', function () {
+                    echo 'movies overview';
+                });
+
+                // will result in '/movies'
+                $router->post('/', function () {
+                    echo 'add movie';
+                });
+
+                // will result in '/movies/id'
+                $router->get('/(\d+)', function ($id) {
+                    echo 'movie id ' . htmlentities($id);
+                });
+
+                // will result in '/movies/id'
+                $router->put('/(\d+)', function ($id) {
+                    echo 'Update movie id ' . htmlentities($id);
+                });
+            });
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                });
+            });
+
+            $property = new ReflectionProperty('\Bramus\Router\Router', 'attributes');
+            $property->setAccessible(true);
+            $attributes = $property->getValue($router);
+
+            $routers = $attributes->afterRoutes;
+
+            list($r1, $r2, $r3, $r4) = $routers['GET'];
+
+            $this->assertEquals('/admin/novel/info', $r4['pattern']);
+            $this->assertEquals('Admin\\Novel\\NovelController@getNovelInfo', $r4['fn']);
         }
 
         public function testUri()
@@ -670,6 +855,32 @@ namespace {
             ob_end_clean();
         }
 
+        public function test404WithClassAtMethod2()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/', function () {
+                echo 'home';
+            });
+
+            $router->ns('Hello')->set404('HelloRouterTestController@notFound');
+
+            // Test the /hello route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/';
+            $router->run();
+            $this->assertEquals('home', ob_get_contents());
+
+            // Test the /hello/bramus route
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/foo';
+            $router->run();
+            $this->assertEquals('route not found 2', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
         public function test404WithClassAtStaticMethod()
         {
             // Create Router
@@ -865,6 +1076,23 @@ namespace {
                 $method->invoke(new \Bramus\Router\Router())
             );
         }
+
+        protected function setUp()
+        {
+            // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
+            $_SERVER['SCRIPT_NAME'] = '/index.php';
+
+            // Default request method to GET
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+
+            // Default SERVER_PROTOCOL method to HTTP/1.1
+            $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+        }
+
+        protected function tearDown()
+        {
+            // nothing
+        }
     }
 }
 
@@ -884,6 +1112,11 @@ namespace Hello {
         public function show($id)
         {
             echo $id;
+        }
+
+        public function notFound()
+        {
+            echo 'route not found 2';
         }
     }
 }

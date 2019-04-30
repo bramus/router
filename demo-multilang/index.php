@@ -9,6 +9,7 @@
     // Include the Router class
     // @note: it's recommended to just use the composer autoloader when working with other packages too
     require_once __DIR__ . '/../src/Bramus/Router/Router.php';
+    require_once __DIR__ . '/../src/Bramus/Router/Attributes.php';
 
     /**
      * A Multilingual Router
@@ -25,7 +26,7 @@
          * List of allowed languages
          * @var array
          */
-        private $allowedLanguages = [];
+        private $allowedLanguages = array();
 
         /**
          * A Multilingual Router
@@ -60,7 +61,7 @@
 
     // Create a Router
     $router = new MultilangRouter(
-        ['en','nl','fr'], //= allowed languages
+        array('en','nl','fr'), //= allowed languages
         'nl' // = default language
     );
 

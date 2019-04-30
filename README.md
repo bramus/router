@@ -234,7 +234,6 @@ $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function($year =
 });
 ```
 
-
 ### Subrouting / Mounting Routes
 
 Use `$router->mount($baseroute, $fn)` to mount a collection of routes onto a subroute pattern. The subroute pattern is prefixed onto all following routes defined in the scope. e.g. Mounting a callback `$fn` onto `/movies` will prefix `/movies` onto all following routes.
@@ -253,6 +252,26 @@ $router->mount('/movies', function() use ($router) {
     });
 
 });
+```
+or
+```php
+    $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+        $router->get('login', 'LoginController@login');
+    });
+    
+    $router->prefix('/novel')->get('/nothing', function () {
+        echo 'yes';
+    });
+    
+    $router->ns('Admin')->prefix('/admin')->get('/login', 'LoginController@login1');
+    $router->get('/login', 'LoginController@login2');
+    
+    $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+        $router->get('login', 'LoginController@login3');
+        $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+            $router->get('info', 'NovelController@getNovelInfo');
+        });
+    });
 ```
 
 Nesting of subroutes is possible, just define a second `$router->mount()` in the callable that's already contained within a preceding `$router->mount()`.
@@ -276,6 +295,14 @@ If most/all of your handling classes are in one and the same namespace, you can 
 $router->setNamespace('\App\Controllers');
 $router->get('/users/(\d+)', 'User@showProfile');
 $router->get('/cars/(\d+)', 'Car@showProfile');
+```
+
+### `Class::Method` calls
+
+We can route to the class static method like so:
+
+```php
+$router->get('/(\d+)', '\App\Controllers\User::showProfile');
 ```
 
 ### Custom 404

@@ -7,30 +7,17 @@
  */
 namespace Bramus\Router;
 
+use Closure;
+
 /**
  * Class Router.
  */
 class Router
 {
     /**
-     * @var array The route patterns and their handling functions
-     */
-    private $afterRoutes = [];
-
-    /**
-     * @var array The before middleware route patterns and their handling functions
-     */
-    private $beforeRoutes = [];
-
-    /**
-     * @var object|callable The function to be executed when no route has been matched
-     */
-    protected $notFoundCallback;
-
-    /**
      * @var string Current base route, used for (sub)route mounting
      */
-    private $baseRoute = '';
+    private $prefix = '';
 
     /**
      * @var string The Request Method that needs to be handled
@@ -48,6 +35,19 @@ class Router
     private $namespace = '';
 
     /**
+     * @var Attributes
+     */
+    private $attributes;
+
+    /**
+     * Router constructor.
+     */
+    public function __construct()
+    {
+        $this->attributes = new Attributes();
+    }
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
      *
      * @param string          $methods Allowed methods, | delimited
@@ -56,15 +56,7 @@ class Router
      */
     public function before($methods, $pattern, $fn)
     {
-        $pattern = $this->baseRoute . '/' . trim($pattern, '/');
-        $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
-
-        foreach (explode('|', $methods) as $method) {
-            $this->beforeRoutes[$method][] = [
-                'pattern' => $pattern,
-                'fn' => $fn,
-            ];
-        }
+        $this->match($methods, $pattern, $fn, 'beforeRoutes');
     }
 
     /**
@@ -73,17 +65,25 @@ class Router
      * @param string          $methods Allowed methods, | delimited
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @param string          $group afterRoutes or beforeRoutes
      */
-    public function match($methods, $pattern, $fn)
+    public function match($methods, $pattern, $fn, $group = 'afterRoutes')
     {
-        $pattern = $this->baseRoute . '/' . trim($pattern, '/');
-        $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
+        $pattern = $this->getPrefix() . '/' . trim($pattern, '/');
+        $pattern = $this->getPrefix() ? rtrim($pattern, '/') : $pattern;
+
+        if (!is_callable($fn)) {
+            // Adjust controller class if namespace has been set
+            if ($this->getNamespace() !== '') {
+                $fn = $this->getNamespace() . '\\' . $fn;
+            }
+        }
 
         foreach (explode('|', $methods) as $method) {
-            $this->afterRoutes[$method][] = [
+            $this->attributes->{$group}[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
-            ];
+            );
         }
     }
 
@@ -173,16 +173,16 @@ class Router
     public function mount($baseRoute, $fn)
     {
         // Track current base route
-        $curBaseRoute = $this->baseRoute;
+        $curBaseRoute = $this->getPrefix();
 
         // Build new base route string
-        $this->baseRoute .= $baseRoute;
+        $this->setPrefix($curBaseRoute . $baseRoute);
 
         // Call the callable
         call_user_func($fn);
 
         // Restore original base route
-        $this->baseRoute = $curBaseRoute;
+        $this->setPrefix($curBaseRoute);
     }
 
     /**
@@ -192,7 +192,7 @@ class Router
      */
     public function getRequestHeaders()
     {
-        $headers = [];
+        $headers = array();
 
         // If getallheaders() is available, use that
         if (function_exists('getallheaders')) {
@@ -207,7 +207,7 @@ class Router
         // Method getallheaders() not available or went wrong: manually extract 'm
         foreach ($_SERVER as $name => $value) {
             if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace([' ', 'Http'], ['-', 'HTTP'], ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
             }
         }
 
@@ -234,7 +234,7 @@ class Router
         // If it's a POST request, check for a method override header
         elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $headers = $this->getRequestHeaders();
-            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
+            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
                 $method = $headers['X-HTTP-Method-Override'];
             }
         }
@@ -251,6 +251,20 @@ class Router
     {
         if (is_string($namespace)) {
             $this->namespace = $namespace;
+        }
+    }
+
+    /**
+     * Set sub namespace
+     * @param $namespace
+     */
+    private function setSubNamespace($namespace)
+    {
+        if (is_string($namespace)) {
+            if ($this->getNamespace()) {
+                $namespace = rtrim($this->getNamespace(), '\\') . '\\' . ltrim($namespace, '\\');
+            }
+            $this->setNamespace($namespace);
         }
     }
 
@@ -277,22 +291,26 @@ class Router
         $this->requestedMethod = $this->getRequestMethod();
 
         // Handle all before middlewares
-        if (isset($this->beforeRoutes[$this->requestedMethod])) {
-            $this->handle($this->beforeRoutes[$this->requestedMethod]);
+        if (isset($this->attributes->beforeRoutes[$this->requestedMethod])) {
+            $this->handle($this->attributes->beforeRoutes[$this->requestedMethod]);
         }
 
         // Handle all routes
         $numHandled = 0;
-        if (isset($this->afterRoutes[$this->requestedMethod])) {
-            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+        if (isset($this->attributes->afterRoutes[$this->requestedMethod])) {
+            $numHandled = $this->handle($this->attributes->afterRoutes[$this->requestedMethod], true);
         }
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            if ($this->notFoundCallback) {
-                $this->invoke($this->notFoundCallback);
+            if ($this->attributes->notFoundCallback) {
+                $this->invoke($this->attributes->notFoundCallback);
             } else {
-                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+                if (!headers_sent()) {
+                    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+                } else {
+                    echo '404 Not Found';
+                }
             }
         } // If a route was handled, perform the finish callback (if any)
         else {
@@ -317,7 +335,10 @@ class Router
      */
     public function set404($fn)
     {
-        $this->notFoundCallback = $fn;
+        if (!is_callable($fn)) {
+            $fn = rtrim($this->getNamespace(), '\\') . '\\' . ltrim($fn, '\\');
+        }
+        $this->attributes->notFoundCallback = $fn;
     }
 
     /**
@@ -373,7 +394,49 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = [])
+    /**
+     * Set sub routes uri prefix.
+     * @param $prefix string A router prefix such as /admin
+     * @return $this
+     */
+    public function prefix($prefix)
+    {
+        $router = clone $this;
+        $router->setSubPrefix($prefix);
+
+        return $router;
+    }
+
+    /**
+     * Set sub routes controller namespace.
+     * @param $namespace string A controller namespace such as Admin or \Admin
+     * @return Router
+     */
+    public function ns($namespace)
+    {
+        $router = clone $this;
+        $router->setSubNamespace($namespace);
+
+        return $router;
+    }
+
+    /**
+     * Define sub routes
+     * @param callable $callable A callable namespace such as
+     *  function (\Bramus\Router\Router $router) {
+     *      $router->get('info', 'NovelController@getNovelInfo');
+     *  }
+     * @return Router
+     */
+    public function group(Closure $callable)
+    {
+        $router = clone $this;
+        $callable($router);
+
+        return $router;
+    }
+
+    private function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
@@ -383,18 +446,22 @@ class Router
         elseif (stripos($fn, '@') !== false) {
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
-            // Adjust controller class if namespace has been set
-            if ($this->getNamespace() !== '') {
-                $controller = $this->getNamespace() . '\\' . $controller;
-            }
             // Check if class exists, if not just ignore and check if the class exists on the default namespace
             if (class_exists($controller)) {
                 // First check if is a static method, directly trying to invoke it.
                 // If isn't a valid static method, we will try as a normal method invocation.
-                if (call_user_func_array([new $controller(), $method], $params) === false) {
+                if (call_user_func_array(array(new $controller(), $method), $params) === false) {
                     // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
-                    if (forward_static_call_array([$controller, $method], $params) === false);
+                    if (forward_static_call_array(array($controller, $method), $params) === false);
                 }
+            }
+        } elseif (stripos($fn, '::') !== false) {
+            // Explode segments of given route
+            list($controller, $method) = explode('::', $fn);
+            // Check if class exists, if not just ignore and check if the class exists on the default namespace
+            if (class_exists($controller)) {
+                // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
+                forward_static_call_array(array($controller, $method), $params);
             }
         }
     }
@@ -442,5 +509,33 @@ class Router
     public function setBasePath($serverBasePath)
     {
         $this->serverBasePath = $serverBasePath;
+    }
+
+    /**
+     * @return string
+     */
+    private function getPrefix()
+    {
+        return $this->prefix;
+    }
+
+    /**
+     * @param string $prefix
+     */
+    private function setPrefix($prefix)
+    {
+        $this->prefix = $prefix;
+    }
+
+    /**
+     * Set sub prefix
+     * @param $prefix
+     */
+    private function setSubPrefix($prefix)
+    {
+        if ($this->getPrefix()) {
+            $prefix = rtrim($this->getPrefix(), '/') . '/' . ltrim($prefix, '/');
+        }
+        $this->prefix = $prefix;
     }
 }
