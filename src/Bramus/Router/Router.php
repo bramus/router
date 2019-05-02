@@ -35,6 +35,11 @@ class Router
     private $namespace = '';
 
     /**
+     * @var string The sub route domain
+     */
+    private $domain;
+
+    /**
      * @var Attributes
      */
     private $attributes;
@@ -75,15 +80,23 @@ class Router
         if (!is_callable($fn)) {
             // Adjust controller class if namespace has been set
             if ($this->getNamespace() !== '') {
-                $fn = $this->getNamespace() . '\\' . $fn;
+                if (substr($fn, 0, 1) != '\\') {
+                    $fn = $this->getNamespace() . '\\' . $fn;
+                }
             }
         }
 
-        foreach (explode('|', $methods) as $method) {
-            $this->attributes->{$group}[$method][] = array(
+        $domain = $this->getDomain();
+
+        if (is_string($methods)) {
+            $methods = explode('|', $methods);
+        }
+        foreach ($methods as $method) {
+            $this->attributes->addRoute($group, $method, array(
                 'pattern' => $pattern,
                 'fn' => $fn,
-            );
+                'domain' => $domain,
+            ));
         }
     }
 
@@ -256,7 +269,8 @@ class Router
 
     /**
      * Set sub namespace
-     * @param $namespace
+     *
+     * @param string $namespace A given namespace
      */
     private function setSubNamespace($namespace)
     {
@@ -276,6 +290,34 @@ class Router
     public function getNamespace()
     {
         return $this->namespace;
+    }
+
+    /**
+     * Handle 404 page
+     */
+    private function handle404()
+    {
+        if (isset($this->attributes->notFoundCallback['404'])) {
+            foreach ($this->attributes->notFoundCallback['404'] as $item) {
+                $domain = $this->getCurrentDomain();
+                if ($item['domain']) {
+                    if ($domain == $item['domain']) {
+                        $this->invoke($item['fn']);
+
+                        return;
+                    }
+                } else {
+                    $this->invoke($item['fn']);
+
+                    return;
+                }
+            }
+        }
+        if (!headers_sent()) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        } else {
+            echo '404 Not Found';
+        }
     }
 
     /**
@@ -303,15 +345,7 @@ class Router
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            if ($this->attributes->notFoundCallback) {
-                $this->invoke($this->attributes->notFoundCallback);
-            } else {
-                if (!headers_sent()) {
-                    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-                } else {
-                    echo '404 Not Found';
-                }
-            }
+            $this->handle404();
         } // If a route was handled, perform the finish callback (if any)
         else {
             if ($callback && is_callable($callback)) {
@@ -338,7 +372,11 @@ class Router
         if (!is_callable($fn)) {
             $fn = rtrim($this->getNamespace(), '\\') . '\\' . ltrim($fn, '\\');
         }
-        $this->attributes->notFoundCallback = $fn;
+        $domain = $this->getDomain();
+        $this->attributes->addRoute('notFoundCallback', '404', array(
+            'fn' => $fn,
+            'domain' => $domain,
+        ));
     }
 
     /**
@@ -356,9 +394,17 @@ class Router
 
         // The current page URL
         $uri = $this->getCurrentUri();
+        // The current page domain
+        $domain = $this->getCurrentDomain();
 
         // Loop all routes
         foreach ($routes as $route) {
+            if (isset($route['domain']) && $route['domain']) {
+                if ($domain != $route['domain']) {
+                    continue;
+                }
+            }
+
             // Replace all curly braces matches {} into word patterns (like Laravel)
             $route['pattern'] = preg_replace('/\/{(.*?)}/', '/(.*?)', $route['pattern']);
 
@@ -421,8 +467,22 @@ class Router
     }
 
     /**
+     * Set sub route domain
+     * @param string $domain The sub domain
+     * @param string $delimiter Use this string to join to the parent domain
+     * @return Router
+     */
+    public function domain($domain, $delimiter = '.')
+    {
+        $router = clone $this;
+        $router->setSubDomain($domain, $delimiter);
+
+        return $router;
+    }
+
+    /**
      * Define sub routes
-     * @param callable $callable A callable namespace such as
+     * @param Closure $callable $callable A callable namespace such as
      *  function (\Bramus\Router\Router $router) {
      *      $router->get('info', 'NovelController@getNovelInfo');
      *  }
@@ -486,6 +546,17 @@ class Router
     }
 
     /**
+     * Get current request domain
+     * @return null|string Domain
+     */
+    private function getCurrentDomain()
+    {
+        $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
+
+        return $domain;
+    }
+
+    /**
      * Return server base Path, and define it if isn't defined.
      *
      * @return string
@@ -536,6 +607,35 @@ class Router
         if ($this->getPrefix()) {
             $prefix = rtrim($this->getPrefix(), '/') . '/' . ltrim($prefix, '/');
         }
-        $this->prefix = $prefix;
+        $this->setPrefix($prefix);
+    }
+
+    /**
+     * @return string
+     */
+    private function getDomain()
+    {
+        return $this->domain;
+    }
+
+    /**
+     * @param string $domain
+     */
+    private function setDomain($domain)
+    {
+        $this->domain = $domain;
+    }
+
+    /**
+     * Merge sub domain
+     * @param string $domain
+     * @param string $delimiter
+     */
+    private function setSubDomain($domain, $delimiter = '.')
+    {
+        if ($this->getDomain()) {
+            $domain = $domain . $delimiter . $this->getDomain();
+        }
+        $this->setDomain($domain);
     }
 }

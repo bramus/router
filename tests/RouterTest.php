@@ -2,24 +2,6 @@
 
 namespace {
 
-    class Handler
-    {
-        public function notfound()
-        {
-            echo 'route not found';
-        }
-    }
-
-    class Test3
-    {
-        public static function test()
-        {
-            echo 'Test3 hello';
-
-            return false;
-        }
-    }
-
     class RouterTest extends PHPUnit_Framework_TestCase
     {
         public function testInit()
@@ -36,17 +18,279 @@ namespace {
 
             $router2 = clone $router;
 
-            ob_start();
             // Define routes
             $router2->prefix('/novel')->get('/info', function () {
                 echo 'yes';
             });
 
+            ob_start();
             // Run it!
             $router->run();
 
             $this->assertEquals(
                 'yes',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter2()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->prefix('/novel')->get('/info', 'MyNamespace\MyController@method');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController@method value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter3()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->prefix('/novel')->get('/info', 'MyNamespace\MyController::staticMethod');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter4()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->ns('MyNamespace')->prefix('/novel')->get('/info', 'MyController@method');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController@method value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter5()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->ns('MyNamespace')->prefix('/novel')->get('/info', 'MyController::staticMethod');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter6()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->prefix('/novel')->get('/info', 'MyNamespace\MyController::staticMethod');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter7()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->prefix('/novel')->group(function (\Bramus\Router\Router $router2) {
+                $router2->get('info', 'MyNamespace\MyController@method');
+            });
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController@method value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter8()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->prefix('/novel')->group(function (\Bramus\Router\Router $router2) {
+                $router2->get('info', 'MyNamespace\MyController::staticMethod');
+            });
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
+                ob_get_clean()
+            );
+        }
+
+        public function testCloneRouter9()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router2 = clone $router;
+
+            // Define routes
+            $router2->prefix('/novel')->group(function (\Bramus\Router\Router $router2) {
+                $router2->get('info', 'MyNamespace\MyController::staticMethod');
+            });
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
+                ob_get_clean()
+            );
+        }
+
+        public function testFullNamespace()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $router->ns('MyNamespace')->prefix('/novel')->get('/info', '\\MyNamespace\\MyController@method');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController@method value',
+                ob_get_clean()
+            );
+        }
+
+        public function testFullNamespace2()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $router->prefix('/novel')->get('/info', '\\MyNamespace\\MyController@method');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController@method value',
+                ob_get_clean()
+            );
+        }
+
+        public function testFullNamespace3()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $router->ns('MyNamespace')->prefix('/novel')->get('/info', '\\MyNamespace\\MyController::staticMethod');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
+                ob_get_clean()
+            );
+        }
+
+        public function testFullNamespace4()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $router->prefix('/novel')->get('/info', '\\MyNamespace\\MyController::staticMethod');
+
+            ob_start();
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'MyNamespace\MyController::staticMethod value',
                 ob_get_clean()
             );
         }
@@ -62,6 +306,66 @@ namespace {
             $router->prefix('/novel')->get('/nothing', function () {
                 echo 'no';
             });
+
+            ob_start();
+            $router->get('/novel/info', function () {
+                echo 'yes';
+            });
+
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'yes',
+                ob_get_clean()
+            );
+        }
+
+        public function testPrefix2()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $cc = function (\Bramus\Router\Router $router) {
+                $router->get('/nothing', function () {
+                    echo 'no';
+                });
+            };
+            $cc($router->prefix('/novel'));
+
+            ob_start();
+            $router->get('/novel/info', function () {
+                echo 'yes';
+            });
+
+            // Run it!
+            $router->run();
+
+            $this->assertEquals(
+                'yes',
+                ob_get_clean()
+            );
+        }
+
+        public function testPrefix3()
+        {
+            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            // Define routes
+            $cc = function (\Bramus\Router\Router $router) {
+                $router->group(function (\Bramus\Router\Router $router) {
+                    $router->get('/novel/info', function () {
+                        echo 'yes';
+                    });
+                });
+            };
+            $cc($router->prefix('/novel'));
 
             ob_start();
             $router->get('/novel/info', function () {
@@ -127,7 +431,7 @@ namespace {
 
         public function testSubGroup()
         {
-            $_SERVER['REQUEST_URI'] = '/novel/info?p1=1';
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
 
             // Create Router instance
             $router = new \Bramus\Router\Router();
@@ -136,6 +440,7 @@ namespace {
                 $router->get('login', 'LoginController@login3');
                 $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
                     $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', 'Test3::test');
                 });
             });
 
@@ -145,13 +450,297 @@ namespace {
 
             $routers = $attributes->afterRoutes;
 
-            list($r1, $r2) = $routers['GET'];
+            list($r1, $r2, $r3) = $routers['GET'];
 
             $this->assertEquals('/admin/login', $r1['pattern']);
             $this->assertEquals('Admin\\LoginController@login3', $r1['fn']);
 
             $this->assertEquals('/admin/novel/info', $r2['pattern']);
             $this->assertEquals('Admin\\Novel\\NovelController@getNovelInfo', $r2['fn']);
+
+            $this->assertEquals('/admin/novel/(\w+)', $r3['pattern']);
+            $this->assertEquals('Test3::test', $r3['fn']);
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('Test3 hello', ob_get_clean());
+        }
+
+        public function testDomain()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', function () {
+                        echo 'admin.router.com 456';
+                    });
+                });
+            });
+
+            $router->domain('admin.router.com')->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', function () {
+                        echo 'admin.router.com 123';
+                    });
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('admin.router.com 123', ob_get_clean());
+        }
+
+        public function testDomain2()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', function () {
+                        echo 'admin.router.com 456';
+                    });
+                });
+            });
+
+            $router->domain('admin.router.com')->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController@method value', ob_get_clean());
+        }
+
+        public function testDomain3()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('(\w+)', '\MyNamespace\MyController@method2');
+                });
+            });
+
+            $router->domain('admin.router.com')->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            $method = new ReflectionMethod('\Bramus\Router\Router', 'getCurrentDomain');
+            $method->setAccessible(true);
+            $domain = $method->invoke($router);
+
+            $this->assertEquals('admin.router.com', $domain);
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController@method value', ob_get_clean());
+        }
+
+        public function testDomain4()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('(\w+)', '\MyNamespace\MyController@method2');
+            });
+
+            $router->domain('admin.router.com')->ns('MyNamespace')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('(\w+)', 'MyController@method');
+            });
+
+            $property = new ReflectionProperty('\Bramus\Router\Router', 'attributes');
+            $property->setAccessible(true);
+            $attributes = $property->getValue($router);
+
+            $routers = $attributes->afterRoutes;
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController@method value', ob_get_clean());
+        }
+
+        public function testDomain5()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            $router->domain('admin.router.com')->ns('MyNamespace')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->get('info', 'NovelController@getNovelInfo');
+                $router->get('(\w+)', 'MyController::staticMethod');
+                $router->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', 'MyController::staticMethod');
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController::staticMethod value', ob_get_clean());
+        }
+
+        public function testSubDomain()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            $router->domain('router.com')->ns('MyNamespace')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->get('info', 'NovelController@getNovelInfo');
+                $router->get('(\w+)', 'MyController::staticMethod');
+                $router->domain('admin')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', 'MyController::staticMethod');
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController::staticMethod value', ob_get_clean());
+        }
+
+        public function testSubDomain2()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            $router->domain('router.com')->ns('MyNamespace')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->get('info', 'NovelController@getNovelInfo');
+                $router->get('(\w+)', 'MyController::staticMethod');
+                $router->domain('admin.', '')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', 'MyController::staticMethod');
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController::staticMethod value', ob_get_clean());
+        }
+
+        public function testSubDomain3()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            $router->domain('com')->ns('MyNamespace')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->get('info', 'NovelController@getNovelInfo');
+                $router->get('(\w+)', 'MyController::staticMethod');
+                $router->domain('admin.router')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', 'MyController::staticMethod');
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController::staticMethod value', ob_get_clean());
+        }
+
+        public function testSubDomain4()
+        {
+            $_SERVER['REQUEST_URI'] = '/admin/novel/aaa?p1=1';
+            $_SERVER['HTTP_HOST'] = 'admin.router.com';
+
+            // Create Router instance
+            $router = new \Bramus\Router\Router();
+
+            $router->ns('Admin')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->ns('Novel')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', '\MyNamespace\MyController@method');
+                });
+            });
+
+            $router->domain('er.com')->ns('MyNamespace')->prefix('/admin')->group(function (\Bramus\Router\Router $router) {
+                $router->get('login', 'LoginController@login3');
+                $router->get('info', 'NovelController@getNovelInfo');
+                $router->get('(\w+)', 'MyController::staticMethod');
+                $router->domain('admin.rout', '')->prefix('/novel')->group(function (\Bramus\Router\Router $router) {
+                    $router->get('info', 'NovelController@getNovelInfo');
+                    $router->get('(\w+)', 'MyController::staticMethod');
+                });
+            });
+
+            ob_start();
+            $router->run();
+            $this->assertEquals('MyNamespace\MyController::staticMethod value', ob_get_clean());
         }
 
         public function testStaticMethod()
@@ -1097,6 +1686,42 @@ namespace {
 }
 
 namespace {
+
+    class Handler
+    {
+        public function notfound()
+        {
+            echo 'route not found';
+        }
+    }
+
+    class Test3
+    {
+        public static function test()
+        {
+            echo 'Test3 hello';
+
+            return false;
+        }
+    }
+
+    class Test4
+    {
+        public static function test2()
+        {
+            echo 'Test4 hello';
+
+            return false;
+        }
+
+        public function test1()
+        {
+            echo 'Test4 hello';
+
+            return false;
+        }
+    }
+
     class RouterTestController
     {
         public function show($id)
@@ -1117,6 +1742,27 @@ namespace Hello {
         public function notFound()
         {
             echo 'route not found 2';
+        }
+    }
+}
+
+// MyNamespace\MyController@method
+namespace MyNamespace {
+    class MyController
+    {
+        public static function staticMethod()
+        {
+            echo 'MyNamespace\MyController::staticMethod value';
+        }
+
+        public function method()
+        {
+            echo 'MyNamespace\MyController@method value';
+        }
+
+        public function method2()
+        {
+            echo 'MyNamespace\MyController@method2 value';
         }
     }
 }

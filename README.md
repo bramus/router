@@ -305,6 +305,13 @@ We can route to the class static method like so:
 $router->get('/(\d+)', '\App\Controllers\User::showProfile');
 ```
 
+### Sub-Domain
+```php
+$router->domain('admin.router.com')->group(function (\Bramus\Router\Router $router) {
+    $router->get('login', 'LoginController@login');
+});
+```
+
 ### Custom 404
 
 The default 404 handler sets a 404 status code and exits. You can override this default 404 handler by using `$router->set404(callable);`
