@@ -997,6 +997,13 @@ namespace {
 			// Cleanup
 			ob_end_clean();
 		}
+
+		public function testInvalidHttpMethodCannotBeProvided()
+		{
+			$router = new \Bramus\Router\Router();
+			$this->setExpectedException('\Exception');
+			$router->setRequestMethodOverride('POSTAL');
+		}
     }
 }
 
