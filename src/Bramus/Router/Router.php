@@ -12,6 +12,11 @@ namespace Bramus\Router;
  */
 class Router
 {
+	/**
+	 * const string The available HTTP verbs
+	 */
+	const HTTP_METHODS = 'GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD';
+
     /**
      * @var array The route patterns and their handling functions
      */
@@ -42,10 +47,56 @@ class Router
      */
     private $serverBasePath;
 
-    /**
-     * @var string Default Controllers Namespace
-     */
-    private $namespace = '';
+	/**
+	 * @var string Default Controllers Namespace
+	 */
+	private $namespace = '';
+
+	/**
+	 * @var string The method that will take precedent over any auto determined request method
+	 */
+	private $requestMethodOverride = '';
+
+	/**
+	 * @var string The URI that will take precedent over any auto determined request URI
+	 */
+	private $requestUriOverride = '';
+
+	/**
+	 * @var bool To indicate that the URI has been requested to be overwritten, in case of an empty request URI
+	 */
+	private $requestUriOverridden = false;
+
+	/**
+	 * Allow the method of the current request to be overridden instead of being derived from the $_SERVER environment global
+	 *
+	 * @see getRequestMethodCandidate()
+	 *
+	 * @param $method The HTTP method to handle this request with
+	 *
+	 * @throws \Exception with invalid HTTP method
+	 */
+	public function setRequestMethodOverride($method)
+	{
+		$method = trim(strtoupper($method));
+
+		if(!in_array($method, explode('|', self::HTTP_METHODS))) throw new \Exception('Invalid HTTP method', 405);
+
+		$this->requestMethodOverride = $method;
+	}
+
+	/**
+	 * Allow the method of the current request to be overridden instead of being derived from the $_SERVER environment global
+	 *
+	 * @see getRequestUriCandidate()
+	 *
+	 * @param $requestUri The request URI to handle this request with
+	 */
+	public function setRequestUriOverride($requestUri)
+	{
+		$this->requestUriOverride = $requestUri;
+		$this->requestUriOverridden = true;
+	}
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
@@ -95,7 +146,7 @@ class Router
      */
     public function all($pattern, $fn)
     {
-        $this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn);
+        $this->match(self::HTTP_METHODS, $pattern, $fn);
     }
 
     /**
@@ -214,6 +265,16 @@ class Router
         return $headers;
     }
 
+	/**
+	 * Get the request method candidate to route the request with, based on overrides
+	 *
+	 * @return string
+	 */
+	public function getRequestMethodCandidate()
+	{
+		return $this->requestMethodOverride ? $this->requestMethodOverride : $_SERVER['REQUEST_METHOD'];
+	}
+
     /**
      * Get the request method used, taking overrides into account.
      *
@@ -221,18 +282,21 @@ class Router
      */
     public function getRequestMethod()
     {
+    	// The variable to check against
+		$checkMethodCandidate = $this->getRequestMethodCandidate();
+
         // Take the method as found in $_SERVER
-        $method = $_SERVER['REQUEST_METHOD'];
+        $method = $checkMethodCandidate;
 
         // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
         // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        if ($checkMethodCandidate == 'HEAD') {
             ob_start();
             $method = 'GET';
         }
 
         // If it's a POST request, check for a method override header
-        elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        elseif (!$this->requestMethodOverride && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $headers = $this->getRequestHeaders();
             if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
                 $method = $headers['X-HTTP-Method-Override'];
@@ -302,7 +366,7 @@ class Router
         }
 
         // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        if ($this->getRequestMethodCandidate() == 'HEAD') {
             ob_end_clean();
         }
 
@@ -399,7 +463,17 @@ class Router
         }
     }
 
-    /**
+	/**
+	 * Get the request URI candidate to route the request with, based on overrides
+	 *
+	 * @return string The request URI to use when determining the route
+	 */
+	public function getRequestUriCandidate()
+	{
+		return $this->requestUriOverridden ? $this->requestUriOverride : $_SERVER['REQUEST_URI'];
+	}
+
+	/**
      * Define the current relative URI.
      *
      * @return string
@@ -407,7 +481,7 @@ class Router
     public function getCurrentUri()
     {
         // Get the current Request URI and remove rewrite base path from it (= allows one to run the router in a sub folder)
-        $uri = substr(rawurldecode($_SERVER['REQUEST_URI']), strlen($this->getBasePath()));
+        $uri = substr(rawurldecode($this->getRequestUriCandidate()), strlen($this->getBasePath()));
 
         // Don't take query params into account on the URL
         if (strstr($uri, '?')) {
