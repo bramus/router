@@ -847,24 +847,156 @@ namespace {
             ob_end_clean();
         }
 
-        public function testHttpMethodOverride()
-        {
-            // Fake the request method to being POST and override it
-            $_SERVER['REQUEST_METHOD'] = 'POST';
-            $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] = 'PUT';
+		public function testHttpMethodOverride()
+		{
+			// Fake the request method to being POST and override it
+			$_SERVER['REQUEST_METHOD'] = 'POST';
+			$_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] = 'PUT';
 
-            $method = new ReflectionMethod(
-                '\Bramus\Router\Router',
-                'getRequestMethod'
-            );
+			$method = new ReflectionMethod(
+				'\Bramus\Router\Router',
+				'getRequestMethod'
+			);
 
-            $method->setAccessible(true);
+			$method->setAccessible(true);
 
-            $this->assertEquals(
-                'PUT',
-                $method->invoke(new \Bramus\Router\Router())
-            );
-        }
+			$this->assertEquals(
+				'PUT',
+				$method->invoke(new \Bramus\Router\Router())
+			);
+		}
+
+		public function testServerDeclaredMethodOverride()
+		{
+			// Some fake data sent by the client
+			$_SERVER['REQUEST_METHOD'] = 'POST';
+			$_SERVER['REQUEST_URI'] = '/resource';
+
+			// Create Router
+			$router = new \Bramus\Router\Router();
+
+			$router->get('/resource', function () {
+				echo 'get_resource';
+			});
+
+			$router->post('/resource', function () {
+				echo 'post_resource';
+			});
+
+			$router->put('/resource', function () {
+				echo 'put_resource';
+			});
+
+			$router->delete('/resource', function () {
+				echo 'delete_resource';
+			});
+
+			ob_start();
+
+			// Test without
+			$router->run();
+			$this->assertEquals('post_resource', ob_get_contents());
+
+			// Test DELETE with override set
+			$_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] = 'DELETE';
+			ob_clean();
+			$router->run();
+			$this->assertEquals('delete_resource', ob_get_contents());
+
+			// Test GET
+			ob_clean();
+			$router->setRequestMethodOverride('GET');
+			$router->run();
+			$this->assertEquals('get_resource', ob_get_contents());
+
+			// Test POST
+			ob_clean();
+			$router->setRequestMethodOverride('POST');
+			$router->run();
+			$this->assertEquals('post_resource', ob_get_contents());
+
+			// Test DELETE
+			ob_clean();
+			$router->setRequestMethodOverride('DELETE');
+			$router->run();
+			$this->assertEquals('delete_resource', ob_get_contents());
+
+			// Test PUT
+			ob_clean();
+			$router->setRequestMethodOverride('PUT');
+			$router->run();
+			$this->assertEquals('put_resource', ob_get_contents());
+
+			// Cleanup
+			ob_end_clean();
+		}
+
+		public function testServerDeclaredRequestUriOverride()
+		{
+			// Some fake data sent by the client
+			$_SERVER['REQUEST_METHOD'] = 'GET';
+			$_SERVER['REQUEST_URI'] = '/client_requested_resource';
+
+			// Create Router
+			$router = new \Bramus\Router\Router();
+
+			$router->get('/client_requested_resource', function () {
+				echo 'resource_for_client';
+			});
+
+			$router->get('/server_set_resource', function () {
+				echo 'resource_for_server';
+			});
+
+			ob_start();
+
+			// Test without modification
+			$router->run();
+			$this->assertEquals('resource_for_client', ob_get_contents());
+
+			// Test with modification
+			ob_clean();
+			$router->setRequestUriOverride('/server_set_resource');
+			$router->run();
+			$this->assertEquals('resource_for_server', ob_get_contents());
+
+			// Cleanup
+			ob_end_clean();
+		}
+
+		public function testServerDeclaredOverridesTogether()
+		{
+			// Some fake data sent by the client
+			$_SERVER['REQUEST_METHOD'] = 'POST';
+			$_SERVER['REQUEST_URI'] = '/resource';
+
+			// Create Router
+			$router = new \Bramus\Router\Router();
+
+			$router->post('/resource', function () {
+				echo 'created_resource';
+			});
+
+			$router->delete('/server_set_resource', function () {
+				echo 'deleted_resource';
+			});
+
+			ob_start();
+
+			// Test without modification
+			$router->run();
+			$this->assertEquals('created_resource', ob_get_contents());
+
+			// Test with modification
+			ob_clean();
+			$router->setRequestMethodOverride('DELETE');
+			$router->setRequestUriOverride('/server_set_resource');
+			$router->run();
+			$this->assertEquals('deleted_resource', ob_get_contents());
+
+			// Cleanup
+			ob_end_clean();
+		}
     }
 }
 
