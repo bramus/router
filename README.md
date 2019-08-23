@@ -14,6 +14,7 @@ Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [
 - Dynamic Route Patterns: [Dynamic PCRE-based Route Patterns](#dynamic-pcre-based-route-patterns) or [Dynamic Placeholder-based Route Patterns](#dynamic-placeholder-based-route-patterns)
 - [Optional Route Subpatterns](#optional-route-subpatterns)
 - [Supports `X-HTTP-Method-Override` header](#overriding-the-request-method)
+- [Optional server side URI and method overrides](#server-side-request-overrides)
 - [Subrouting / Mounting Routes](#subrouting--mounting-routes)
 - [Allowance of `Class@Method` calls](#classmethod-calls)
 - [Custom 404 handling](#custom-404)
@@ -342,6 +343,14 @@ Note: If the route handling function has `exit()`ed the run callback won't be ru
 
 Use `X-HTTP-Method-Override` to override the HTTP Request Method. Only works when the original Request Method is `POST`. Allowed values for `X-HTTP-Method-Override` are `PUT`, `DELETE`, or `PATCH`.
 
+### Server side request overrides
+
+Run one or both of the following methods to manually override the request URI and/or request method. Useful if you're unable to rewrite your request or need to transmit the route URI another way. Can also be used for custom method overwriting with a form input variable instead of the above `X-HTTP-Method-Override` header, where that may be stripped or disallowed by the web server.
+
+```php
+$router->setRequestMethodOverride('POST');
+$router->setRequestUriOverride('/movies');
+```
 
 ### Subfolder support
 

@@ -93,6 +93,28 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
         });
     });
 
+    // Optional request overrides, based on your own app logic.
+	/*try
+	{
+		// This will overwrite the request method
+		$router->setRequestMethodOverride('POST');
+	}
+	catch(\Exception $e)
+	{
+		if($e->getCode() == 405)
+		{
+			// The requested method was not allowed to be set, the router will now default to the requests HTTP method.
+			// Handle the exception yourself, or ignore it.
+		}
+		else
+		{
+			// Handle the exception yourself, or ignore it.
+		}
+	}*/
+
+	// This will overwrite the request URI, for example if it was sent over another header or as part of a larger payload to the server
+	//$router->setRequestUriOverride('/movies');
+
     // Thunderbirds are go!
     $router->run();
 
