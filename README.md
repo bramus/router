@@ -421,6 +421,14 @@ When making `HEAD` requests all output will be buffered to prevent any content t
 
 To achieve this, `bramus/router` but will internally re-route `HEAD` requests to their equivalent `GET` request and automatically suppress all output.
 
+## A note on CORS with `axios` or `fetch`
+
+Sometimes you might encounter the following message in your console, after making API requests using `fetch` or `axios` (from React, for example) to an endpoint created using this router:
+```
+Access to XMLHttpRequest at '<YOUR_WEBSIET>/<SOME_ROUTE>' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+Even if you sent the correct headers. This often doesn't have to do with CORS at all - it's your PHP script misbehaving.
+Either visit `<YOUR_WEBSITE>/<SOME_ROUTE>` from a web browser or check the networking->relevant request->preview in Chrom Developer Tools to validate this.
 
 ## Unit Testing & Code Coverage
 
