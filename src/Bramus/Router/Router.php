@@ -387,14 +387,9 @@ class Router
             if ($this->getNamespace() !== '') {
                 $controller = $this->getNamespace() . '\\' . $controller;
             }
-            // Check if class exists, if not just ignore and check if the class exists on the default namespace
-            if (class_exists($controller)) {
-                // First check if is a static method, directly trying to invoke it.
-                // If isn't a valid static method, we will try as a normal method invocation.
-                if (call_user_func_array([new $controller(), $method], $params) === false) {
-                    // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
-                    if (forward_static_call_array([$controller, $method], $params) === false);
-                }
+            // Check if method/class exists, if not just ignore
+            if (method_exists($controller, $method)) {
+                call_user_func_array([$controller, $method], $params);
             }
         }
     }
