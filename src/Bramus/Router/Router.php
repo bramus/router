@@ -388,7 +388,7 @@ class Router
                 $controller = $this->getNamespace() . '\\' . $controller;
             }
             // Check if method/class exists, if not just ignore
-            if (method_exists($controller, $method)) {
+            if (is_callable([$controller, $method])) {
                 call_user_func_array([$controller, $method], $params);
             }
         }
