@@ -165,7 +165,7 @@ When multiple subpatterns are defined, the resulting __route handling parameters
 
 ```php
 $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
-    echo 'Movie #' . $movieId . ', photo #' . $photoId);
+    echo 'Movie #' . $movieId . ', photo #' . $photoId;
 });
 ```
 
