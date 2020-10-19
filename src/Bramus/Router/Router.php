@@ -377,6 +377,7 @@ class Router
 
     private function invoke($fn, $params = array())
     {
+
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
         }
@@ -385,13 +386,23 @@ class Router
         elseif (stripos($fn, '@') !== false) {
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
+
             // Adjust controller class if namespace has been set
             if ($this->getNamespace() !== '') {
                 $controller = $this->getNamespace() . '\\' . $controller;
             }
-            // Check if method/class exists, if not just ignore
+
+            // Make sure it's callable
             if (is_callable(array($controller, $method))) {
-                call_user_func_array(array($controller, $method), $params);
+                if ((new \ReflectionMethod($controller, $method))->isStatic()) {
+                    forward_static_call_array(array($controller, $method), $params);
+                } else {
+                    // Make sure we have an instance, to prevent "non-static method … should not be called statically" warnings
+                    if (\is_string($controller)) {
+                        $controller = new $controller();
+                    }
+                    call_user_func_array(array($controller, $method), $params);
+                }
             }
         }
     }

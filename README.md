@@ -268,7 +268,7 @@ $router->get('/(\d+)', '\App\Controllers\User@showProfile');
 
 When a request matches the specified route URI, the `showProfile` method on the `User` class will be executed. The defined route parameters will be passed to the class method.
 
-The method can be static or non-static. In case of a non-static method, a new instance of the class will be created.
+The method can be static (recommended) or non-static (not-recommended). In case of a non-static method, a new instance of the class will be created.
 
 If most/all of your handling classes are in one and the same namespace, you can set the default namespace to use on your router instance via `setNamespace()`
 
