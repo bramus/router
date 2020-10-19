@@ -26,7 +26,7 @@ $finder = PhpCsFixer\Finder::create()
 return PhpCsFixer\Config::create()
     ->setRules([
         '@PSR2' => true,
-        'array_syntax' => [ 'syntax' => 'short' ],
+        'array_syntax' => [ 'syntax' => 'long' ],
         'binary_operator_spaces' => [ 'align_equals' => false, 'align_double_arrow' => false ],
         'cast_spaces' => true,
         'combine_consecutive_unsets' => true,

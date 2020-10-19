@@ -25,7 +25,7 @@
          * List of allowed languages
          * @var array
          */
-        private $allowedLanguages = [];
+        private $allowedLanguages = array();
 
         /**
          * A Multilingual Router
@@ -60,7 +60,7 @@
 
     // Create a Router
     $router = new MultilangRouter(
-        ['en','nl','fr'], //= allowed languages
+        array('en','nl','fr'), //= allowed languages
         'nl' // = default language
     );
 
