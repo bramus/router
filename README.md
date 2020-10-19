@@ -182,7 +182,7 @@ Placeholders are easier to use than PRCEs, but offer you less control as they in
 
 ```php
 $router->get('/movies/{movieId}/photos/{photoId}', function($movieId, $photoId) {
-    echo 'Movie #' . $movieId . ', photo #' . $photoId);
+    echo 'Movie #' . $movieId . ', photo #' . $photoId;
 });
 ```
 
@@ -190,7 +190,7 @@ Note: the name of the placeholder does not need to match with the name of the pa
 
 ```php
 $router->get('/movies/{foo}/photos/{bar}', function($movieId, $photoId) {
-    echo 'Movie #' . $movieId . ', photo #' . $photoId);
+    echo 'Movie #' . $movieId . ', photo #' . $photoId;
 });
 ```
 
