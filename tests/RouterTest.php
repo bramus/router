@@ -865,6 +865,29 @@ namespace {
                 $method->invoke(new \Bramus\Router\Router())
             );
         }
+
+        public function testControllerMethodReturningFalse()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/false', 'RouterTestController@returnFalse');
+            $router->get('/static-false', 'RouterTestController@staticReturnFalse');
+
+            // Test returnFalse
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/false';
+            $router->run();
+            $this->assertEquals('returnFalse', ob_get_contents());
+
+            // Test staticReturnFalse
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/static-false';
+            $router->run();
+            $this->assertEquals('staticReturnFalse', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
     }
 }
 
@@ -874,6 +897,20 @@ namespace {
         public function show($id)
         {
             echo $id;
+        }
+
+        public function returnFalse()
+        {
+            echo 'returnFalse';
+
+            return false;
+        }
+
+        public static function staticReturnFalse()
+        {
+            echo 'staticReturnFalse';
+
+            return false;
         }
     }
 }
