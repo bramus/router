@@ -2,7 +2,11 @@
 
 ## 1.next – ????.??.??
 
-
+- Fixed: Correctly invoke static/non-static class methods _(@bramus)_
+- Fixed: Fix PHP 5.3 support _(@cikal)_
+- Fixed: Fix arguments in demo _(@khromov)_
+- Fixed: Fix #72 _(@acicali)_
+- Added: PHP 7.4 support _(@ShaneMcC)_
 
 ## 1.4.2 – 2019.02.27
 
