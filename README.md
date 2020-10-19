@@ -121,7 +121,7 @@ Usage Examples:
 
 ```php
 // This route handling function will only be executed when visiting http(s)://www.example.org/about
-$router->get('/about', function($name) {
+$router->get('/about', function() {
     echo 'About Page Contents';
 });
 ```
@@ -165,7 +165,7 @@ When multiple subpatterns are defined, the resulting __route handling parameters
 
 ```php
 $router->get('/movies/(\d+)/photos/(\d+)', function($movieId, $photoId) {
-    echo 'Movie #' . $movieId . ', photo #' . $photoId);
+    echo 'Movie #' . $movieId . ', photo #' . $photoId;
 });
 ```
 

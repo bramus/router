@@ -500,22 +500,22 @@ namespace {
             // Create Router
             $router = new \Bramus\Router\Router();
             $router->get('/blog(/\d{4}(/\d{2}(/\d{2}(/[a-z0-9_-]+)?)?)?)?', function ($year = null, $month = null, $day = null, $slug = null) {
-                if (!$year) {
+                if ($year === null) {
                     echo 'Blog overview';
 
                     return;
                 }
-                if (!$month) {
+                if ($month === null) {
                     echo 'Blog year overview (' . $year . ')';
 
                     return;
                 }
-                if (!$day) {
+                if ($day === null) {
                     echo 'Blog month overview (' . $year . '-' . $month . ')';
 
                     return;
                 }
-                if (!$slug) {
+                if ($slug === null) {
                     echo 'Blog day overview (' . $year . '-' . $month . '-' . $day . ')';
 
                     return;

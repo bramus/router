@@ -15,12 +15,12 @@ class Router
     /**
      * @var array The route patterns and their handling functions
      */
-    private $afterRoutes = [];
+    private $afterRoutes = array();
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
-    private $beforeRoutes = [];
+    private $beforeRoutes = array();
 
     /**
      * @var object|callable The function to be executed when no route has been matched
@@ -60,10 +60,10 @@ class Router
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->beforeRoutes[$method][] = [
+            $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
-            ];
+            );
         }
     }
 
@@ -80,10 +80,10 @@ class Router
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->afterRoutes[$method][] = [
+            $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
-            ];
+            );
         }
     }
 
@@ -192,7 +192,7 @@ class Router
      */
     public function getRequestHeaders()
     {
-        $headers = [];
+        $headers = array();
 
         // If getallheaders() is available, use that
         if (function_exists('getallheaders')) {
@@ -207,7 +207,7 @@ class Router
         // Method getallheaders() not available or went wrong: manually extract 'm
         foreach ($_SERVER as $name => $value) {
             if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace([' ', 'Http'], ['-', 'HTTP'], ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
             }
         }
 
@@ -234,7 +234,7 @@ class Router
         // If it's a POST request, check for a method override header
         elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $headers = $this->getRequestHeaders();
-            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
+            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
                 $method = $headers['X-HTTP-Method-Override'];
             }
         }
@@ -351,10 +351,12 @@ class Router
 
                     // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
                     if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
-                        return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
+                        if ($matches[$index + 1][0][1] > -1) {
+                          return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
+                        }
                     } // We have no following parameters: return the whole lot
 
-                    return isset($match[0][0]) ? trim($match[0][0], '/') : null;
+                    return isset($match[0][0]) && $match[0][1] != -1 ? trim($match[0][0], '/') : null;
                 }, $matches, array_keys($matches));
 
                 // Call the handling function with the URL parameters if the desired input is callable
@@ -373,7 +375,7 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = [])
+    private function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
@@ -388,8 +390,8 @@ class Router
                 $controller = $this->getNamespace() . '\\' . $controller;
             }
             // Check if method/class exists, if not just ignore
-            if (is_callable([$controller, $method])) {
-                call_user_func_array([$controller, $method], $params);
+            if (is_callable(array($controller, $method))) {
+                call_user_func_array(array($controller, $method), $params);
             }
         }
     }
