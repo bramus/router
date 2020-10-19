@@ -15,12 +15,12 @@ class Router
     /**
      * @var array The route patterns and their handling functions
      */
-    private $afterRoutes = [];
+    private $afterRoutes = array();
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
-    private $beforeRoutes = [];
+    private $beforeRoutes = array();
 
     /**
      * @var object|callable The function to be executed when no route has been matched
@@ -60,10 +60,10 @@ class Router
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->beforeRoutes[$method][] = [
+            $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
-            ];
+            );
         }
     }
 
@@ -80,10 +80,10 @@ class Router
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
-            $this->afterRoutes[$method][] = [
+            $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
-            ];
+            );
         }
     }
 
@@ -192,7 +192,7 @@ class Router
      */
     public function getRequestHeaders()
     {
-        $headers = [];
+        $headers = array();
 
         // If getallheaders() is available, use that
         if (function_exists('getallheaders')) {
@@ -207,7 +207,7 @@ class Router
         // Method getallheaders() not available or went wrong: manually extract 'm
         foreach ($_SERVER as $name => $value) {
             if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace([' ', 'Http'], ['-', 'HTTP'], ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
             }
         }
 
@@ -234,7 +234,7 @@ class Router
         // If it's a POST request, check for a method override header
         elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $headers = $this->getRequestHeaders();
-            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
+            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
                 $method = $headers['X-HTTP-Method-Override'];
             }
         }
@@ -373,7 +373,7 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = [])
+    private function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
@@ -391,9 +391,9 @@ class Router
             if (class_exists($controller)) {
                 // First check if is a static method, directly trying to invoke it.
                 // If isn't a valid static method, we will try as a normal method invocation.
-                if (call_user_func_array([new $controller(), $method], $params) === false) {
+                if (call_user_func_array(array(new $controller(), $method), $params) === false) {
                     // Try to call the method as an non-static method. (the if does nothing, only avoids the notice)
-                    if (forward_static_call_array([$controller, $method], $params) === false);
+                    if (forward_static_call_array(array($controller, $method), $params) === false);
                 }
             }
         }
