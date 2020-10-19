@@ -65,15 +65,15 @@
     );
 
     $router->get('/([a-z0-9_-]+)', function ($language) {
-        exit('This is the ' . $language . ' index');
+        exit('This is the ' . htmlentities($language) . ' index');
     });
 
     $router->get('/([a-z0-9_-]+)/([a-z0-9_-]+)', function ($language, $slug) {
-        exit('This is the ' . $language . ' version of ' . $slug);
+        exit('This is the ' . htmlentities($language) . ' version of ' . htmlentities($slug));
     });
 
     $router->get('/([a-z0-9_-]+)/(.*)', function ($language, $slug) {
-        exit('This is the ' . $language . ' version of ' . $slug . ' (multiple segments allowed)');
+        exit('This is the ' . htmlentities($language) . ' version of ' . htmlentities($slug) . ' (multiple segments allowed)');
     });
 
     // Thunderbirds are go!
