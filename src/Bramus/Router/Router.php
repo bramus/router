@@ -289,11 +289,7 @@ class Router
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            if ($this->notFoundCallback) {
-                $this->invoke($this->notFoundCallback);
-            } else {
-                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-            }
+            $this->return404();
         } // If a route was handled, perform the finish callback (if any)
         else {
             if ($callback && is_callable($callback)) {
@@ -318,6 +314,17 @@ class Router
     public function set404($fn)
     {
         $this->notFoundCallback = $fn;
+    }
+
+    /**
+     * Triggers 404 response
+     */
+    public function return404(){
+        if ($this->notFoundCallback) {
+            $this->invoke($this->notFoundCallback);
+        } else {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        }
     }
 
     /**
