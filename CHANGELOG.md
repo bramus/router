@@ -7,6 +7,7 @@
 - Fixed: Fix arguments in demo _(@khromov)_
 - Fixed: Fix #72 _(@acicali)_
 - Added: PHP 7.4 support _(@ShaneMcC)_
+- Added: Ability to externally trigger a 404 _(@PlanetTheCloud)_
 
 ## 1.4.2 – 2019.02.27
 
