@@ -696,6 +696,27 @@ namespace {
             ob_end_clean();
         }
 
+        public function test404WithManualTrigger()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->get('/', function() use ($router) {
+                $router->trigger404();
+            });
+            $router->set404(function () {
+                echo 'route not found';
+            });
+
+            // Test the / route
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/';
+            $router->run();
+            $this->assertEquals('route not found', ob_get_contents());
+
+            // Cleanup
+            ob_end_clean();
+        }
+
         public function testBeforeRouterMiddleware()
         {
             // Create Router
