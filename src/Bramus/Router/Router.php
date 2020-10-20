@@ -289,7 +289,7 @@ class Router
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            $this->return404();
+            $this->trigger404();
         } // If a route was handled, perform the finish callback (if any)
         else {
             if ($callback && is_callable($callback)) {
@@ -319,7 +319,7 @@ class Router
     /**
      * Triggers 404 response
      */
-    public function return404(){
+    public function trigger404(){
         if ($this->notFoundCallback) {
             $this->invoke($this->notFoundCallback);
         } else {
