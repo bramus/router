@@ -297,6 +297,19 @@ $router->set404('\App\Controllers\Error@notFound');
 
 The 404 handler will be executed when no route pattern was matched to the current URL.
 
+💡 You can also manually trigger the 404 handler by calling `$router->trigger404()`
+
+```php
+$router->get('/([a-z0-9-]+)', function($id) use ($router) {
+    if (!Posts::exists($id)) {
+        $router->trigger404();
+        return;
+    }
+
+    // …
+});
+```
+
 
 ### Before Route Middlewares
 
