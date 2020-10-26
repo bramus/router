@@ -2,6 +2,10 @@
 
 ## 1.next – ????.??.??
 
+
+
+## 1.5 – 2020.10.26
+
 - Fixed: Correctly invoke static/non-static class methods _(@bramus)_
 - Fixed: Fix PHP 5.3 support _(@cikal)_
 - Fixed: Fix arguments in demo _(@khromov)_
