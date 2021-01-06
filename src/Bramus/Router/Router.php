@@ -398,17 +398,22 @@ class Router
                 $controller = $this->getNamespace() . '\\' . $controller;
             }
 
-            // Make sure it's callable
-            if (is_callable(array($controller, $method))) {
-                if ((new \ReflectionMethod($controller, $method))->isStatic()) {
-                    forward_static_call_array(array($controller, $method), $params);
-                } else {
-                    // Make sure we have an instance, to prevent "non-static method … should not be called statically" warnings
-                    if (\is_string($controller)) {
-                        $controller = new $controller();
+            try {
+                $reflectedMethod = new \ReflectionMethod($controller, $method);
+                // Make sure it's callable
+                if ($reflectedMethod->isPublic() && (!$reflectedMethod->isAbstract())) {
+                    if ($reflectedMethod->isStatic()) {
+                        forward_static_call_array(array($controller, $method), $params);
+                    } else {
+                        // Make sure we have an instance, because a non-static method must not be called statically
+                        if (\is_string($controller)) {
+                            $controller = new $controller();
+                        }
+                        call_user_func_array(array($controller, $method), $params);
                     }
-                    call_user_func_array(array($controller, $method), $params);
                 }
+            } catch (\ReflectionException $reflectionException) {
+                // The controller class is not available or the class does not have the method $method
             }
         }
     }
