@@ -327,7 +327,7 @@ class Router
         }
 
         // Return matched routes if enabled, otherwise true/false
-        return ($this->returnRoutes === true) ? $this->matchedRoutes : $numHandled !== 0;
+        return ($this->returnRoutes === true) ? $this->matchedRoutes : $this->numHandled !== 0;
     }
 
     /**
