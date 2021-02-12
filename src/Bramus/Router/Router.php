@@ -271,7 +271,7 @@ class Router
      *
      * @return bool
      */
-    public function run($callback = null)
+    public function run($callback = null, $quitAfterRun = true)
     {
         // Define which method we need to handle
         $this->requestedMethod = $this->getRequestMethod();
@@ -284,7 +284,7 @@ class Router
         // Handle all routes
         $numHandled = 0;
         if (isset($this->afterRoutes[$this->requestedMethod])) {
-            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], $quitAfterRun);
         }
 
         // If no route was handled, trigger the 404 (if any)
