@@ -8,6 +8,8 @@ jobs:
   tests:
     name: Tests on PHP ${{ matrix.php }} ${{ matrix.dependencies }}
     runs-on: ubuntu-20.04
+    container:
+      image: shivammathur/node:2004
     strategy:
       matrix:
         php: ['5.6', '7.0', '7.1', '7.2', '7.3', '7.4']
