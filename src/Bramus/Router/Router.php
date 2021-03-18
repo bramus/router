@@ -385,7 +385,11 @@ class Router
     private function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
-            call_user_func_array($fn, $params);
+            if (count($params)) {
+                call_user_func_array($fn, $params);
+            } else {
+                call_user_func_array($fn, array('empty'));
+            }
         }
 
         // If not, check the existence of special parameters
