@@ -23,9 +23,9 @@ class Router
     private $beforeRoutes = array();
 
     /**
-     * @var object|callable The function to be executed when no route has been matched
+     * @var array [object|callable] The function to be executed when no route has been matched
      */
-    protected $notFoundCallback;
+    protected $notFoundCallback = [];
 
     /**
      * @var string Current base route, used for (sub)route mounting
@@ -289,7 +289,7 @@ class Router
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            $this->trigger404();
+            $this->trigger404($this->afterRoutes[$this->requestedMethod]);
         } // If a route was handled, perform the finish callback (if any)
         else {
             if ($callback && is_callable($callback)) {
@@ -309,22 +309,90 @@ class Router
     /**
      * Set the 404 handling function.
      *
+     * @param object|callable|string $match_fn The function to be executed
      * @param object|callable $fn The function to be executed
      */
-    public function set404($fn)
+    public function set404($match_fn, $fn = null)
     {
-        $this->notFoundCallback = $fn;
+      if (!is_null($fn)) {
+        $this->notFoundCallback[$match_fn] = $fn;
+      } else {
+        $this->notFoundCallback['/'] = $match_fn;
+      }
     }
 
     /**
      * Triggers 404 response
+     *
+     * @param string $pattern A route pattern such as /about/system
      */
-    public function trigger404(){
-        if ($this->notFoundCallback) {
-            $this->invoke($this->notFoundCallback);
-        } else {
-            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+    public function trigger404($match = null){
+
+        // Counter to keep track of the number of routes we've handled
+        $numHandled = 0;
+
+        // handle 404 pattern
+        if (count($this->notFoundCallback) > 0)
+        {
+            // loop fallback-routes
+            foreach ($this->notFoundCallback as $route_pattern => $route_callable) {
+
+              // matches result
+              $matches = [];
+
+              // check if there is a match and get matches as $matches (pointer)
+              $is_match = $this->patternMatches($route_pattern, $this->getCurrentUri(), $matches, PREG_OFFSET_CAPTURE);
+
+              // is fallback route match?
+              if ($is_match) {
+
+                // Rework matches to only contain the matches, not the orig string
+                $matches = array_slice($matches, 1);
+
+                // Extract the matched URL parameters (and only the parameters)
+                $params = array_map(function ($match, $index) use ($matches) {
+
+                  // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
+                  if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
+                    if ($matches[$index + 1][0][1] > -1) {
+                      return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
+                    }
+                  } // We have no following parameters: return the whole lot
+
+                  return isset($match[0][0]) && $match[0][1] != -1 ? trim($match[0][0], '/') : null;
+                }, $matches, array_keys($matches));
+
+                $this->invoke($route_callable);
+
+                ++$numHandled;
+              }
+            }
+            if($numHandled == 0 and $this->notFoundCallback['/']) {
+              $this->invoke($this->notFoundCallback['/']);
+            } elseif ($numHandled == 0) {
+              header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            }
         }
+    }
+
+    /**
+    * Replace all curly braces matches {} into word patterns (like Laravel)
+    * Checks if there is a routing match
+    *
+    * @param $pattern
+    * @param $uri
+    * @param $matches
+    * @param $flags
+    *
+    * @return bool -> is match yes/no
+    */
+    private function patternMatches($pattern, $uri, &$matches, $flags)
+    {
+      // Replace all curly braces matches {} into word patterns (like Laravel)
+      $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
+
+      // we may have a match!
+      return boolval(preg_match_all('#^' . $pattern . '$#', $uri, $matches, PREG_OFFSET_CAPTURE));
     }
 
     /**
@@ -345,11 +413,13 @@ class Router
 
         // Loop all routes
         foreach ($routes as $route) {
-            // Replace all curly braces matches {} into word patterns (like Laravel)
-            $route['pattern'] = preg_replace('/\/{(.*?)}/', '/(.*?)', $route['pattern']);
 
-            // we have a match!
-            if (preg_match_all('#^' . $route['pattern'] . '$#', $uri, $matches, PREG_OFFSET_CAPTURE)) {
+            // get routing matches
+            $is_match = $this->patternMatches($route['pattern'], $uri, $matches, PREG_OFFSET_CAPTURE);
+
+            // is there a valid match?
+            if ($is_match) {
+
                 // Rework matches to only contain the matches, not the orig string
                 $matches = array_slice($matches, 1);
 

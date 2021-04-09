@@ -628,6 +628,10 @@ namespace {
                 echo 'route not found';
             });
 
+            $router->set404('/api(/.*)?', function () {
+                echo 'api route not found';
+            });
+
             // Test the /hello route
             ob_start();
             $_SERVER['REQUEST_URI'] = '/';
@@ -639,6 +643,12 @@ namespace {
             $_SERVER['REQUEST_URI'] = '/foo';
             $router->run();
             $this->assertEquals('route not found', ob_get_contents());
+
+            // Test the custom api 404
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/api/getUser';
+            $router->run();
+            $this->assertEquals('api route not found', ob_get_contents());
 
             // Cleanup
             ob_end_clean();
