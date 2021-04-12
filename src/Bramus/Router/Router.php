@@ -16,13 +16,13 @@ class Router
     /**
     * used protocols to call another website (as constants)
     */
-    public const GET_ROUTE     = 1;
-    public const POST_ROUTE    = 2;
-    public const PUT_ROUTE     = 3;
-    public const DELETE_ROUTE  = 4;
-    public const OPTIONS_ROUTE = 5;
-    public const PATCH_ROUTE   = 6;
-    public const HEAD_ROUTE    = 7;
+    const GET_ROUTE     = 1;
+    const POST_ROUTE    = 2;
+    const PUT_ROUTE     = 3;
+    const DELETE_ROUTE  = 4;
+    const OPTIONS_ROUTE = 5;
+    const PATCH_ROUTE   = 6;
+    const HEAD_ROUTE    = 7;
 
     /**
      * @var array The route patterns and their handling functions
