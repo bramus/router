@@ -325,6 +325,21 @@ $router->set404(function() {
 });
 ```
 
+You can also define multiple custom routes e.x. you want to define an `/api` route, you can print a custom 404 page:
+
+```php
+$router->set404('/api(/.*)?', function() {
+    header('HTTP/1.1 404 Not Found');
+    header('Content-Type: application/json');
+
+    $jsonArray = array();
+    $jsonArray['status'] = "404";
+    $jsonArray['status_text'] = "route not defined";
+
+    echo json_encode($jsonArray);
+});
+```
+
 Also supported are `Class@Method` callables:
 
 ```php
