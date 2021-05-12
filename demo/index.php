@@ -19,6 +19,23 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
         echo '404, route not found!';
     });
 
+    // custom 404
+    $router->set404('/test(/.*)?', function () {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        echo '<h1><mark>404, route not found!</mark></h1>';
+    });
+
+    $router->set404('/api(/.*)?', function() {
+        header('HTTP/1.1 404 Not Found');
+        header('Content-Type: application/json');
+
+        $jsonArray = array();
+        $jsonArray['status'] = "404";
+        $jsonArray['status_text'] = "route not defined";
+
+        echo json_encode($jsonArray);
+    });
+
     // Before Router Middleware
     $router->before('GET', '/.*', function () {
         header('X-Powered-By: bramus/router');
@@ -26,7 +43,25 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
 
     // Static route: / (homepage)
     $router->get('/', function () {
-        echo '<h1>bramus/router</h1><p>Try these routes:<p><ul><li>/hello/<em>name</em></li><li>/blog</li><li>/blog/<em>year</em></li><li>/blog/<em>year</em>/<em>month</em></li><li>/blog/<em>year</em>/<em>month</em>/<em>day</em></li><li>/movies</li><li>/movies/<em>id</em></li></ul>';
+        echo '<h1>bramus/router</h1>
+              <p>Try these routes:<p>
+              <ul>
+                <li><a href="/hello/joe">/hello/<em>name</em></a></li>
+                <li><a href="/blog">/blog</a></li>
+                <li><a href="/blog/'.date('Y').'">/blog/<em>year</em></a></li>
+                <li><a href="/blog/'.date('Y').'/'.date('m').'">/blog/<em>year</em>/<em>month</em></a></li>
+                <li><a href="/blog/'.date('Y').'/'.date('m').'/'.date('d').'">/blog/<em>year</em>/<em>month</em>/<em>day</em></a></li>
+                <li><a href="/movies">/movies</a></li>
+                <li><a href="/movies/23">/movies/<em>id</em></a></li>
+              </ul>
+              <br><br>
+              <p>Custom error routes</p>
+              <ul>
+                <li><a href="/something">/*</a> <em>Normal 404</em></li>
+                <li><a href="/test">/test/*</a> <em>Custom 404</em></li>
+                <li><a href="/api/getUser">/api/getUser</a> <em>API 404</em></li>
+              </ul>
+        ';
     });
 
     // Static route: /hello
