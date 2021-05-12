@@ -10,8 +10,10 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
     // @note: it's recommended to just use the composer autoloader when working with other packages too
     require_once __DIR__ . '/../src/Bramus/Router/Router.php';
 
+    use \Bramus\Router\Router;
+
     // Create a Router
-    $router = new \Bramus\Router\Router();
+    $router = new Router();
 
     // Custom 404 Handler
     $router->set404(function () {
@@ -73,6 +75,31 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
     $router->get('/hello/(\w+)', function ($name) {
         echo 'Hello ' . htmlentities($name);
     });
+
+    // call another route by name
+    $router->get('/redirect(/.*)?', function () use ($router) {
+        $router->callRoute(Router::GET_ROUTE, 'hiddenRoute', 'Value', 'Another Value');
+    });
+
+    // call another route by name
+    $router->get('/redirect2(/.*)?', function () use ($router) {
+        $router->callRoute(Router::GET_ROUTE, 'hiddenRoute2');
+    });
+
+    // illegal duplicate
+    // $router->get('/something3(/.*)?', function () use ($router) {
+    //     $router->callRoute(Router::GET_ROUTE, 'hiddenRoute2');
+    // });
+
+    // named route
+    $router->get('/hidden(/.*)?', function ($value = array()) {
+        echo 'Got called '.implode($value);
+    }, 'hiddenRoute');
+
+    // named route
+    $router->get('/hidden2(/.*)?', function () {
+        echo 'Got called';
+    }, 'hiddenRoute2');
 
     // Dynamic route: /ohai/name/in/parts
     $router->get('/ohai/(.*)', function ($url) {
