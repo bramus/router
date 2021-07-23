@@ -4,6 +4,10 @@
 
 
 
+## 1.6 – 2021.07.23
+
+- Added: Ability to set multiple 404s, depending on the route prefix _(@uvulpos)_
+
 ## 1.5 – 2020.10.26
 
 - Fixed: Correctly invoke static/non-static class methods _(@bramus)_
