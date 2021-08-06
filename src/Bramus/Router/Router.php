@@ -43,9 +43,9 @@ class Router
     private $serverBasePath;
 
     /**
-     * @var string Default Controllers Namespace
+     * @var array Default Controllers Namespace
      */
-    private $namespace = '';
+    private $namespace = [];
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
@@ -63,6 +63,7 @@ class Router
             $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
+                'baseRoute' => $this->baseRoute
             );
         }
     }
@@ -83,6 +84,7 @@ class Router
             $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
+                'baseRoute' => $this->baseRoute
             );
         }
     }
@@ -250,7 +252,7 @@ class Router
     public function setNamespace($namespace)
     {
         if (is_string($namespace)) {
-            $this->namespace = $namespace;
+            $this->namespace[$this->baseRoute] = $namespace;
         }
     }
 
@@ -261,7 +263,7 @@ class Router
      */
     public function getNamespace()
     {
-        return $this->namespace;
+        return $this->namespace[$this->baseRoute];
     }
 
     /**
@@ -314,11 +316,11 @@ class Router
      */
     public function set404($match_fn, $fn = null)
     {
-      if (!is_null($fn)) {
-        $this->notFoundCallback[$match_fn] = $fn;
-      } else {
-        $this->notFoundCallback['/'] = $match_fn;
-      }
+        if (!is_null($fn)) {
+            $this->notFoundCallback[$match_fn] = $fn;
+        } else {
+            $this->notFoundCallback['/'] = $match_fn;
+        }
     }
 
     /**
@@ -337,62 +339,62 @@ class Router
             // loop fallback-routes
             foreach ($this->notFoundCallback as $route_pattern => $route_callable) {
 
-              // matches result
-              $matches = [];
+                // matches result
+                $matches = [];
 
-              // check if there is a match and get matches as $matches (pointer)
-              $is_match = $this->patternMatches($route_pattern, $this->getCurrentUri(), $matches, PREG_OFFSET_CAPTURE);
+                // check if there is a match and get matches as $matches (pointer)
+                $is_match = $this->patternMatches($route_pattern, $this->getCurrentUri(), $matches, PREG_OFFSET_CAPTURE);
 
-              // is fallback route match?
-              if ($is_match) {
+                // is fallback route match?
+                if ($is_match) {
 
-                // Rework matches to only contain the matches, not the orig string
-                $matches = array_slice($matches, 1);
+                    // Rework matches to only contain the matches, not the orig string
+                    $matches = array_slice($matches, 1);
 
-                // Extract the matched URL parameters (and only the parameters)
-                $params = array_map(function ($match, $index) use ($matches) {
+                    // Extract the matched URL parameters (and only the parameters)
+                    $params = array_map(function ($match, $index) use ($matches) {
 
-                  // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
-                  if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
-                    if ($matches[$index + 1][0][1] > -1) {
-                      return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
-                    }
-                  } // We have no following parameters: return the whole lot
+                        // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
+                        if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
+                            if ($matches[$index + 1][0][1] > -1) {
+                                return trim(substr($match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
+                            }
+                        } // We have no following parameters: return the whole lot
 
-                  return isset($match[0][0]) && $match[0][1] != -1 ? trim($match[0][0], '/') : null;
-                }, $matches, array_keys($matches));
+                        return isset($match[0][0]) && $match[0][1] != -1 ? trim($match[0][0], '/') : null;
+                    }, $matches, array_keys($matches));
 
-                $this->invoke($route_callable);
+                    $this->invoke($route_callable);
 
-                ++$numHandled;
-              }
+                    ++$numHandled;
+                }
             }
             if($numHandled == 0 and $this->notFoundCallback['/']) {
-              $this->invoke($this->notFoundCallback['/']);
+                $this->invoke($this->notFoundCallback['/']);
             } elseif ($numHandled == 0) {
-              header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
             }
         }
     }
 
     /**
-    * Replace all curly braces matches {} into word patterns (like Laravel)
-    * Checks if there is a routing match
-    *
-    * @param $pattern
-    * @param $uri
-    * @param $matches
-    * @param $flags
-    *
-    * @return bool -> is match yes/no
-    */
+     * Replace all curly braces matches {} into word patterns (like Laravel)
+     * Checks if there is a routing match
+     *
+     * @param $pattern
+     * @param $uri
+     * @param $matches
+     * @param $flags
+     *
+     * @return bool -> is match yes/no
+     */
     private function patternMatches($pattern, $uri, &$matches, $flags)
     {
-      // Replace all curly braces matches {} into word patterns (like Laravel)
-      $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
+        // Replace all curly braces matches {} into word patterns (like Laravel)
+        $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
 
-      // we may have a match!
-      return boolval(preg_match_all('#^' . $pattern . '$#', $uri, $matches, PREG_OFFSET_CAPTURE));
+        // we may have a match!
+        return boolval(preg_match_all('#^' . $pattern . '$#', $uri, $matches, PREG_OFFSET_CAPTURE));
     }
 
     /**
@@ -437,6 +439,7 @@ class Router
                 }, $matches, array_keys($matches));
 
                 // Call the handling function with the URL parameters if the desired input is callable
+                $this->baseRoute = $route['baseRoute'];
                 $this->invoke($route['fn'], $params);
 
                 ++$numHandled;
@@ -462,7 +465,6 @@ class Router
         elseif (stripos($fn, '@') !== false) {
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
-
             // Adjust controller class if namespace has been set
             if ($this->getNamespace() !== '') {
                 $controller = $this->getNamespace() . '\\' . $controller;

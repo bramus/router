@@ -878,6 +878,42 @@ namespace {
             ob_end_clean();
         }
 
+        public function testNamespaceWithMouting()
+        {
+            $router = new \Bramus\Router\Router();
+
+            $router->mount('/show', function () use ($router) {
+                $router->setNamespace('\Hello');
+                $router->get('/without/(.*)', 'HelloRouterTestController@show');
+
+                $router->mount('/folder', function () use ($router) {
+                    $router->setNamespace('\Hello\Folder');
+                    $router->get('/(.*)', 'HelloFolderRouterTestController@show');
+
+                });
+            });
+
+            $router->get('/anything/(.*)', 'Hello\HelloRouterTestController@show');
+
+            ob_start();
+            $_SERVER['REQUEST_URI'] = '/show/without/foo';
+            $router->run();
+            $this->assertEquals('foo', ob_get_contents());
+
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/show/folder/foo';
+            $router->run();
+            $this->assertEquals('foo', ob_get_contents());
+
+            ob_clean();
+            $_SERVER['REQUEST_URI'] = '/anything/foo';
+            $router->run();
+            $this->assertEquals('foo', ob_get_contents());
+
+            // cleanup
+            ob_end_clean();
+        }
+
         public function testHttpMethodOverride()
         {
             // Fake the request method to being POST and override it
@@ -948,6 +984,16 @@ namespace {
 
 namespace Hello {
     class HelloRouterTestController
+    {
+        public function show($id)
+        {
+            echo $id;
+        }
+    }
+}
+
+namespace Hello\Folder {
+    class HelloFolderRouterTestController
     {
         public function show($id)
         {
