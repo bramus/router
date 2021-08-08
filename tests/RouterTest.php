@@ -14,7 +14,7 @@ namespace {
 
     class RouterTest extends TestCase
     {
-        protected function setUp()
+        protected function setUp(): void
         {
             // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
             $_SERVER['SCRIPT_NAME'] = '/index.php';
@@ -26,7 +26,7 @@ namespace {
             $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
         }
 
-        protected function tearDown()
+        protected function tearDown(): void
         {
             // nothing
         }
