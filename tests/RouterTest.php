@@ -2,6 +2,8 @@
 
 namespace {
 
+    use PHPUnit\Framework\TestCase;
+
     class Handler
     {
         public function notfound()
@@ -10,7 +12,7 @@ namespace {
         }
     }
 
-    class RouterTest extends PHPUnit_Framework_TestCase
+    class RouterTest extends TestCase
     {
         protected function setUp()
         {
