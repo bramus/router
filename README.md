@@ -178,7 +178,10 @@ Examples:
 - `/movies/{id}`
 - `/profile/{username}`
 
-Placeholders are easier to use than PRCEs, but offer you less control as they internally get translated to a PRCE that matches any character (`.*`).
+Placeholders are easier to use than PRCEs. They offer you less control as they internally get translated to a PRCE that matches any character (`.*`), unless they are used with extra PCRE patterns:
+
+- `/movies/{id:\d+}`
+- `/profile/{username:\w{3,}}`
 
 ```php
 $router->get('/movies/{movieId}/photos/{photoId}', function($movieId, $photoId) {
@@ -192,6 +195,48 @@ Note: the name of the placeholder does not need to match with the name of the pa
 $router->get('/movies/{foo}/photos/{bar}', function($movieId, $photoId) {
     echo 'Movie #' . $movieId . ', photo #' . $photoId;
 });
+```
+
+This type of placeholders is also required when using __URI Generation__ and __Named Routes__.
+
+
+### Named Routes
+
+Routes can be named, optionally. This is required when using __URI Generation__.
+
+```php
+$router->get('/movies/{movieId:\d+}/photos/', function($movieId) {
+    echo 'Photos of movie #' . $movieId;
+}, 'movie.photos');
+```
+
+
+### URI Generation
+
+Route URIs can be generated from __Named Routes__ with __Dynamic Placeholder-based Route Patterns__.
+
+```php
+$router->route('movie.photos', ['movieId' => 4711]); // Result: /movies/4711/photos
+```
+
+The array index has to match the name of the placeholder. Left-overs in the array will be added as query string:
+```php
+$router->route('movie.photos', ['movieId' => 4711, 'sortBy' => 'date']); // Result: /movies/4711/photos?sortBy=date
+```
+
+Note: Any PCRE-based patterns in the route will be removed.
+```php
+$router->get('/movies/{movieId:\d+}/photos/(\d+)?', function($movieId, $photoId=null) {
+    if ($photoId !== null) {
+        echo 'Photo #' . $photoId . ' of movie #' . $movieId;
+    } else {
+        echo 'All photos of movie #' . $movieId;
+    }
+}, 'movie.photos');
+
+// ...
+
+$router->route('movie.photos', ['movieId' => 4711]); // Result: /movies/4711/photos
 ```
 
 
