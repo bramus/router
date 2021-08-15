@@ -397,8 +397,13 @@ class Router
     */
     private function patternMatches($pattern, $uri, &$matches, $flags)
     {
-      // Replace all curly braces matches {} into word patterns (like Laravel)
+      // Replace all curly braces matches {} into word patterns (like Laravel).
+      // Therefore mask quantifiers like {m,n} or {n} ... with [[m,n]] or [[n]],
+      // replace curly braces and then unmask quantifiers.
+      $pattern = preg_replace('/\{([0-9,]*)\}/', '[[\\1]]', $pattern);
+      $pattern = preg_replace('/\/{.*?:(.*?)}/', '/(\\1)', $pattern);
       $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
+      $pattern = preg_replace('/\[\[([0-9,]*)\]\]/', '{\\1}', $pattern);
 
       // we may have a match!
       return boolval(preg_match_all('#^' . $pattern . '$#', $uri, $matches, PREG_OFFSET_CAPTURE));
@@ -553,14 +558,17 @@ class Router
     }
 
     public function generateUri($route, $vars=[]) {
-        // remove positional placeholders from route uri
+        // remove positional, optional placeholders from route uri
         do {
-            $route = preg_replace('/\([^(]*\)\??/', '', $route, -1, $count);
+            $route = preg_replace('/\([^(]*\)\?/', '', $route, -1, $count);
         } while ($count > 0);
-    
+
+        // remove all quantifiers b/c of colliding curly braces
+        $route = preg_replace('/\{[0-9,]*\}/', '', $route);
+
         // replace named variables like /user/{username}
         $route = preg_replace_callback_array([
-            '/(?|\{([^}:]+)\}|\{([^:]+):.+\})/' => function ($match) use ($route, &$vars) {
+            '/(?|\{([^}:]+?)\}|\{([^:]+):.+?\})/' => function ($match) use ($route, &$vars) {
                 $varname = $match[1];
     
                 if (array_key_exists($varname, $vars)) {
