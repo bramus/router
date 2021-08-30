@@ -590,6 +590,6 @@ class Router
             $route .= '?' . http_build_query($vars);
         }
     
-        return $route;
+        return $this->getBasePath() . ltrim($route, '/');
     }
 }
