@@ -48,6 +48,40 @@ class Router
     private $namespace = '';
 
     /**
+     * @var boolean Return routes from run or execute as normal
+     */
+    private $returnRoutes = false;
+
+    /**
+     * @var array Collection of matching routes
+     */
+    private $matchedRoutes = array();
+
+    /**
+     * @var int Store number of handled routes
+     */
+    private $numHandled = 0;
+
+    /**
+     * Sets our router to store and return matched routes for manual processing.
+     *
+     * @param boolean   $enabled
+     */
+    public function setReturnRoutes($enabled=true)
+    {
+        $this->returnRoutes = (bool)$enabled;
+    }
+
+    /**
+    * to clear cache for phpunit
+    */
+    public function clearMatchingRoutesCache()
+    {
+      $this->numHandled = 0;
+      $this->matchedRoutes = array();
+    }
+
+    /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
      *
      * @param string          $methods Allowed methods, | delimited
@@ -83,6 +117,7 @@ class Router
             $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
+                'methode' => $method // for clarification in matching routes array
             );
         }
     }
@@ -282,13 +317,12 @@ class Router
         }
 
         // Handle all routes
-        $numHandled = 0;
         if (isset($this->afterRoutes[$this->requestedMethod])) {
-            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+            $this->numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
         }
 
         // If no route was handled, trigger the 404 (if any)
-        if ($numHandled === 0) {
+        if ($this->numHandled === 0) {
             $this->trigger404($this->afterRoutes[$this->requestedMethod]);
         } // If a route was handled, perform the finish callback (if any)
         else {
@@ -302,8 +336,8 @@ class Router
             ob_end_clean();
         }
 
-        // Return true if a route was handled, false otherwise
-        return $numHandled !== 0;
+        // Return matched routes if enabled, otherwise true/false
+        return ($this->returnRoutes === true) ? $this->matchedRoutes : $this->numHandled !== 0;
     }
 
     /**
@@ -327,9 +361,6 @@ class Router
      * @param string $pattern A route pattern such as /about/system
      */
     public function trigger404($match = null){
-
-        // Counter to keep track of the number of routes we've handled
-        $numHandled = 0;
 
         // handle 404 pattern
         if (count($this->notFoundCallback) > 0)
@@ -364,12 +395,12 @@ class Router
 
                 $this->invoke($route_callable);
 
-                ++$numHandled;
+                ++$this->numHandled;
               }
             }
-            if($numHandled == 0 and $this->notFoundCallback['/']) {
+            if($this->numHandled == 0 and $this->notFoundCallback['/']) {
               $this->invoke($this->notFoundCallback['/']);
-            } elseif ($numHandled == 0) {
+            } elseif ($this->numHandled == 0) {
               header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
             }
         }
@@ -406,7 +437,7 @@ class Router
     private function handle($routes, $quitAfterRun = false)
     {
         // Counter to keep track of the number of routes we've handled
-        $numHandled = 0;
+        $this->numHandled = 0;
 
         // The current page URL
         $uri = $this->getCurrentUri();
@@ -437,9 +468,14 @@ class Router
                 }, $matches, array_keys($matches));
 
                 // Call the handling function with the URL parameters if the desired input is callable
-                $this->invoke($route['fn'], $params);
+                if ($this->returnRoutes === false) {
+                    $this->invoke($route['fn'], $params);
+                }
+                else {
+                    $this->matchedRoutes[] = $route;
+                }
 
-                ++$numHandled;
+                ++$this->numHandled;
 
                 // If we need to quit, then quit
                 if ($quitAfterRun) {
@@ -449,7 +485,7 @@ class Router
         }
 
         // Return the number of routes handled
-        return $numHandled;
+        return $this->numHandled;
     }
 
     private function invoke($fn, $params = array())

@@ -17,6 +17,7 @@ Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [
 - [Subrouting / Mounting Routes](#subrouting--mounting-routes)
 - [Allowance of `Class@Method` calls](#classmethod-calls)
 - [Custom 404 handling](#custom-404)
+- [Return Matching Routes](#return-matching-routes)
 - [Before Route Middlewares](#before-route-middlewares)
 - [Before Router Middlewares / Before App Middlewares](#before-router-middlewares)
 - [After Router Middleware / After App Middleware (Finish Callback)](#after-router-middleware--run-callback)
@@ -323,6 +324,25 @@ $router->get('/([a-z0-9-]+)', function($id) use ($router) {
 
     // …
 });
+```
+
+### Return Matching Routes
+If you don't want to just execute the callback function, you can just return the result
+of the matching request and do it yourself
+
+```php
+$router = new \Bramus\Router\Router();
+$router->get('/hello', 'SayHelloController@sayHello');
+$router->setReturnRoutes();
+$routes_result = $router->run();
+
+$expected_result = array(
+  array(
+    "pattern" => "/hello",
+    "fn" => "SayHelloController@sayHello",
+    'methode' => 'GET'
+  )
+);
 ```
 
 
