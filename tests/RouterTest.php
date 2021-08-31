@@ -919,13 +919,53 @@ namespace {
             // Cleanup
             ob_end_clean();
         }
+
+        public function testReturnMatchingRoutes()
+        {
+          // Create Router
+          $router = new \Bramus\Router\Router();
+          $router->get('/false', 'RouterTestController@returnFalse');
+          $router->post('/false', 'RouterTestController@show');
+          $router->get('/false/hallo', 'RouterTestController@returnFalse');
+          $router->get('/static-false', 'RouterTestController@staticReturnFalse');
+
+          ob_start();
+          $_SERVER['REQUEST_URI'] = '/false';
+          $router->setReturnRoutes();
+          $routes_result = $router->run();
+          $expected_result = array(
+            array(
+              "pattern" => "/false",
+              "fn" => "RouterTestController@returnFalse",
+              'methode' => 'GET'
+            )
+          );
+          $this->assertEquals($expected_result, $routes_result);
+
+
+          ob_clean();
+          $router->clearMatchingRoutesCache();
+          $_SERVER['REQUEST_METHOD'] = 'POST';
+          $routes_result = $router->run();
+          $expected_result = array(
+            array(
+              "pattern" => "/false",
+              "fn" => "RouterTestController@show",
+              'methode' => 'POST'
+            )
+          );
+          $this->assertEquals($expected_result, $routes_result);
+
+          // Cleanup
+          ob_end_clean();
+        }
     }
 }
 
 namespace {
     class RouterTestController
     {
-        public function show($id)
+        public function show($id=1337)
         {
             echo $id;
         }
