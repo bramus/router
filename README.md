@@ -1,4 +1,4 @@
-# bramus/router
+# HaloRouter Based on [bramus/router](https://github.com/bramus/router)
 
 [![Build Status](https://github.com/bramus/router/workflows/CI/badge.svg)](https://github.com/bramus/router/actions) [![Source](http://img.shields.io/badge/source-bramus/router-blue.svg?style=flat-square)](https://github.com/bramus/router) [![Version](https://img.shields.io/packagist/v/bramus/router.svg?style=flat-square)](https://packagist.org/packages/bramus/router) [![Downloads](https://img.shields.io/packagist/dt/bramus/router.svg?style=flat-square)](https://packagist.org/packages/bramus/router/stats) [![License](https://img.shields.io/packagist/l/bramus/router.svg?style=flat-square)](https://github.com/bramus/router/blob/master/LICENSE)
 
@@ -470,3 +470,26 @@ To achieve this, `bramus/router` but will internally re-route `HEAD` requests to
 ## License
 
 `bramus/router` is released under the MIT public license. See the enclosed `LICENSE` for details.
+
+## Changelog
+
+### 2.0
+Added request in route clousers.
+
+Now you can have a request object to get request parameters.
+```php
+$router->get('/', function( $request ) {
+    echo $request->getMethod();
+});
+```
+
+Available methods:
+- `getMethod`
+- `getUri`
+- `getHeaders`
+- `getHeader`
+- `hasHeader`
+- `getBody`
+- `getJsonBody`
+- `withAttribute`
+- `getAttribute`

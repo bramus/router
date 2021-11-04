@@ -1,8 +1,8 @@
 {
-    "name": "bramus/router",
-    "description": "A lightweight and simple object oriented PHP Router",
+    "name": "amireshoon/router",
+    "description": "A lightweight and simple object oriented PHP Router Based on Bramus library",
     "keywords": ["router", "routing"],
-    "homepage": "https://github.com/bramus/router",
+    "homepage": "https://github.com/amireshoon/router",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -10,6 +10,11 @@
             "name": "Bram(us) Van Damme",
             "email": "bramus@bram.us",
             "homepage": "http://www.bram.us"
+        },
+        {
+            "name": "Amirhossein Meydani",
+            "email": "amirhwsin@outlook.com",
+            "homepage": "https://amirhwsin.ir"
         }
     ],
     "require": {
