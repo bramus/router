@@ -21,7 +21,7 @@
         "friendsofphp/php-cs-fixer": "~2.14"
     },
     "autoload": {
-        "psr-0": {"Bramus": "src/"}
+        "classmap": ["src/"]
     },
     "scripts": {
         "test": "./vendor/bin/phpunit --colors=always",

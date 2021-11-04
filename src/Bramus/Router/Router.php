@@ -453,7 +453,7 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = array())
+    public function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
