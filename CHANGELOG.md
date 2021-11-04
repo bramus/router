@@ -1,6 +1,9 @@
 # Changelog for `bramus/router`
 
-## 1.next – ????.??.??
+## 2.0 - 2021-11-04
+From now on this repo is available with `amireshoon/router` package name in composer. Also from now on you should use [`\Halo\Router`](https://github.com/amireshoon/router/blob/b3a7e253cfd684a9dda2b91fbe34229838b3a83d/src/amireshoon/HaloRouter/HaloRouter.php) class for router and [`\Halo\Request`](https://github.com/amireshoon/router/blob/b3a7e253cfd684a9dda2b91fbe34229838b3a83d/src/amireshoon/HaloRouter/Request.php) for requuests.
+- Added request object
+- Fixed not defined index when no route is defined
 
 
 
