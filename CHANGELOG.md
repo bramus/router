@@ -2,7 +2,9 @@
 
 ## 1.next – ????.??.??
 
+## 1.6.1 – 2021.11.19
 
+- Fixed: Fix `trigger404()` to work without custom 404 handler _([#169](https://github.com/bramus/router/pull/169))_ _(@mjoris)_
 
 ## 1.6 – 2021.07.23
 
