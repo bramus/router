@@ -367,11 +367,11 @@ class Router
                 ++$numHandled;
               }
             }
-            if($numHandled == 0 and $this->notFoundCallback['/']) {
-              $this->invoke($this->notFoundCallback['/']);
-            } elseif ($numHandled == 0) {
-              header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-            }
+        }
+        if (($numHandled == 0) && (isset($this->notFoundCallback['/']))) {
+            $this->invoke($this->notFoundCallback['/']);
+        } elseif ($numHandled == 0) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
         }
     }
 
