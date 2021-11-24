@@ -12,6 +12,18 @@ namespace Bramus\Router;
  */
 class Router
 {
+
+    /**
+    * used protocols to call another website (as constants)
+    */
+    const GET_ROUTE     = 1;
+    const POST_ROUTE    = 2;
+    const PUT_ROUTE     = 3;
+    const DELETE_ROUTE  = 4;
+    const OPTIONS_ROUTE = 5;
+    const PATCH_ROUTE   = 6;
+    const HEAD_ROUTE    = 7;
+
     /**
      * @var array The route patterns and their handling functions
      */
@@ -74,16 +86,25 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function match($methods, $pattern, $fn)
+    public function match($methods, $pattern, $fn, $name = '')
     {
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
+
         foreach (explode('|', $methods) as $method) {
+          $names_list = array();
             $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
+                'name' => $name,
             );
+            $names_list[] = $name;
+        }
+
+        foreach (array_count_values($names_list) as $name => $count) {
+          if ($count > 1)
+          { throw new RouterException("Route-Name dulpicate! => ".$name.". Please keep your names unique"); }
         }
     }
 
@@ -93,9 +114,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function all($pattern, $fn)
+    public function all($pattern, $fn, $name = '')
     {
-        $this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn);
+        $this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn, $name);
     }
 
     /**
@@ -104,9 +125,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function get($pattern, $fn)
+    public function get($pattern, $fn, $name = '')
     {
-        $this->match('GET', $pattern, $fn);
+        $this->match('GET', $pattern, $fn, $name);
     }
 
     /**
@@ -115,9 +136,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function post($pattern, $fn)
+    public function post($pattern, $fn, $name = '')
     {
-        $this->match('POST', $pattern, $fn);
+        $this->match('POST', $pattern, $fn, $name);
     }
 
     /**
@@ -126,9 +147,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function patch($pattern, $fn)
+    public function patch($pattern, $fn, $name = '')
     {
-        $this->match('PATCH', $pattern, $fn);
+        $this->match('PATCH', $pattern, $fn, $name);
     }
 
     /**
@@ -137,9 +158,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function delete($pattern, $fn)
+    public function delete($pattern, $fn, $name = '')
     {
-        $this->match('DELETE', $pattern, $fn);
+        $this->match('DELETE', $pattern, $fn, $name);
     }
 
     /**
@@ -148,9 +169,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function put($pattern, $fn)
+    public function put($pattern, $fn, $name = '')
     {
-        $this->match('PUT', $pattern, $fn);
+        $this->match('PUT', $pattern, $fn, $name);
     }
 
     /**
@@ -159,9 +180,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function options($pattern, $fn)
+    public function options($pattern, $fn, $name = '')
     {
-        $this->match('OPTIONS', $pattern, $fn);
+        $this->match('OPTIONS', $pattern, $fn, $name);
     }
 
     /**
@@ -262,6 +283,57 @@ class Router
     public function getNamespace()
     {
         return $this->namespace;
+    }
+
+
+    /**
+    *
+    */
+    public function callRoute($method, $name, ... $params)
+    {
+
+      $foundRoute = false;
+
+      // translate request protocol id to name
+      switch ($method)
+      {
+        case 1: $method = "GET"; break;
+        case 2: $method = "POST"; break;
+        case 3: $method = "PUT"; break;
+        case 4: $method = "DELETE"; break;
+        case 5: $method = "OPTIOMS"; break;
+        case 6: $method = "PATCH"; break;
+        case 7: $method = "HEAD"; break;
+        default: $method = "UNKNOWN"; break;
+      }
+
+      // loop routes of methods
+      foreach ($this->afterRoutes[$method] as $key => $route)
+      {
+
+        // check if name equals any route name
+        if (!empty($route['name']) and $route['name'] == $name) {
+
+          // if route got a function and is callable execute / otherwiese 404
+          if (isset($route['fn']) && is_callable($route['fn']))
+          {
+            // call route with or without params
+            if (!empty($params))
+            { $route['fn']($params); }
+            else
+            { $route['fn'](); }
+
+            $foundRoute = true;
+          }
+          else
+          { $this->trigger404(); }
+        }
+      }
+
+      if (!$foundRoute) {
+        // throw ecception
+        throw new RouterException("Could not found a callable Route => ".$method." :: ".$name);
+      }
     }
 
     /**

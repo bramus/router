@@ -16,6 +16,7 @@ Built by Bram(us) Van Damme _([https://www.bram.us](https://www.bram.us))_ and [
 - [Supports `X-HTTP-Method-Override` header](#overriding-the-request-method)
 - [Subrouting / Mounting Routes](#subrouting--mounting-routes)
 - [Allowance of `Class@Method` calls](#classmethod-calls)
+- [Redirect to another Route](#redirect-to-another-route)
 - [Custom 404 handling](#custom-404)
 - [Before Route Middlewares](#before-route-middlewares)
 - [Before Router Middlewares / Before App Middlewares](#before-router-middlewares)
@@ -276,6 +277,41 @@ If most/all of your handling classes are in one and the same namespace, you can 
 $router->setNamespace('\App\Controllers');
 $router->get('/users/(\d+)', 'User@showProfile');
 $router->get('/cars/(\d+)', 'Car@showProfile');
+```
+
+## Redirect to another Route
+
+If you need to render another view (e.x. 403 not permitted) you can name
+your routes and call them by name. This is optional but must be unique, otherwise
+you'll receive an exception.
+
+The `callRoute` Method needs the following information:
+- Type of request (GET, POST, HEAD,...)
+- Named route
+- [optional] parameter separated by comma, which will be received as an array
+
+```php
+// named route
+$router->get('/hidden(/.*)?', function ($value = array()) {
+    echo 'Got called '.implode($value);
+}, 'hiddenRoute');
+
+// call named route
+$router->get('/redirect(/.*)?', function () use ($router) {
+    $router->callRoute(Router::GET_ROUTE, 'hiddenRoute', 'Value', 'Another Value');
+});
+```
+
+**Request Types:**
+
+```php
+Router::GET_ROUTE
+Router::POST_ROUTE
+Router::PUT_ROUTE
+Router::DELETE_ROUTE
+Router::OPTIONS_ROUTE
+Router::PATCH_ROUTE
+Router::HEAD_ROUTE
 ```
 
 ### Custom 404
