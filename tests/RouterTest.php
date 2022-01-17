@@ -241,6 +241,64 @@ namespace {
             });
         }
 
+        public function testArrayMatch()
+        {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+            $router->match(['POST', 'PUT'], '/', function () {
+                echo 'post|put';
+            });
+
+            $notFound = false;
+            $router->set404(function () use (&$notFound) {
+                $notFound = true;
+            });
+
+            // Test GET
+            $notFound = false;
+            run_request($router, 'GET', '/', function ($responseBody) use (&$notFound) {
+                $this->assertTrue($notFound);
+            });
+
+            // Test POST
+            $notFound = false;
+            run_request($router, 'POST', '/', function ($responseBody) use (&$notFound) {
+                $this->assertFalse($notFound);
+                $this->assertEquals('post|put', $responseBody);
+            });
+
+            // Test PUT
+            $notFound = false;
+            run_request($router, 'PUT', '/', function ($responseBody) use (&$notFound) {
+                $this->assertFalse($notFound);
+                $this->assertEquals('post|put', $responseBody);
+            });
+
+            // Test DELETE
+            $notFound = false;
+            run_request($router, 'DELETE', '/', function ($responseBody) use (&$notFound) {
+                $this->assertTrue($notFound);
+            });
+
+            // Test OPTIONS
+            $notFound = false;
+            run_request($router, 'OPTIONS', '/', function ($responseBody) use (&$notFound) {
+                $this->assertTrue($notFound);
+            });
+
+            // Test PATCH
+            $notFound = false;
+            run_request($router, 'PATCH', '/', function ($responseBody) use (&$notFound) {
+                $this->assertTrue($notFound);
+            });
+
+            // Test HEAD
+            $notFound = false;
+            run_request($router, 'HEAD', '/', function ($responseBody) use (&$notFound) {
+                $this->assertTrue($notFound);
+            });
+        }
+
         public function testShorthandAll()
         {
             // Create Router

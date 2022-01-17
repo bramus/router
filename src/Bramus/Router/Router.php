@@ -13,6 +13,11 @@ namespace Bramus\Router;
 class Router
 {
     /**
+     * List of all HTTP methods.
+     */
+    const ALL_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'];
+
+    /**
      * @var array The route patterns and their handling functions
      */
     private $afterRoutes = array();
@@ -70,7 +75,7 @@ class Router
     /**
      * Store a route and a handling function to be executed when accessed using one of the specified methods.
      *
-     * @param string          $methods Allowed methods, | delimited
+     * @param string|string[]  $methods Allowed methods, | delimited
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
@@ -79,7 +84,8 @@ class Router
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
-        foreach (explode('|', $methods) as $method) {
+        $handledMethods = is_array($methods) ? $methods : explode('|', $methods);
+        foreach ($handledMethods as $method) {
             $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
                 'fn' => $fn,
@@ -95,7 +101,7 @@ class Router
      */
     public function all($pattern, $fn)
     {
-        $this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn);
+        $this->match(self::ALL_METHODS, $pattern, $fn);
     }
 
     /**
@@ -106,7 +112,7 @@ class Router
      */
     public function get($pattern, $fn)
     {
-        $this->match('GET', $pattern, $fn);
+        $this->match(['GET'], $pattern, $fn);
     }
 
     /**
@@ -117,7 +123,7 @@ class Router
      */
     public function post($pattern, $fn)
     {
-        $this->match('POST', $pattern, $fn);
+        $this->match(['POST'], $pattern, $fn);
     }
 
     /**
@@ -128,7 +134,7 @@ class Router
      */
     public function patch($pattern, $fn)
     {
-        $this->match('PATCH', $pattern, $fn);
+        $this->match(['PATCH'], $pattern, $fn);
     }
 
     /**
@@ -139,7 +145,7 @@ class Router
      */
     public function delete($pattern, $fn)
     {
-        $this->match('DELETE', $pattern, $fn);
+        $this->match(['DELETE'], $pattern, $fn);
     }
 
     /**
@@ -150,7 +156,7 @@ class Router
      */
     public function put($pattern, $fn)
     {
-        $this->match('PUT', $pattern, $fn);
+        $this->match(['PUT'], $pattern, $fn);
     }
 
     /**
@@ -161,7 +167,7 @@ class Router
      */
     public function options($pattern, $fn)
     {
-        $this->match('OPTIONS', $pattern, $fn);
+        $this->match(['OPTIONS'], $pattern, $fn);
     }
 
     /**
