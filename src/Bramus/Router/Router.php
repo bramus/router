@@ -289,7 +289,7 @@ class Router
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            $this->trigger404($this->afterRoutes[$this->requestedMethod]);
+            $this->trigger404();
         } // If a route was handled, perform the finish callback (if any)
         else {
             if ($callback && is_callable($callback)) {
@@ -323,10 +323,8 @@ class Router
 
     /**
      * Triggers 404 response
-     *
-     * @param string $pattern A route pattern such as /about/system
      */
-    public function trigger404($match = null){
+    public function trigger404(){
 
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
