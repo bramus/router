@@ -2,6 +2,70 @@
 
 namespace {
 
+    /**
+     * Run given callable with $_SERVER global variable set up to mimic a HTTP request.
+     * @param callable(): void $fn.
+     * @param array<string, string> $requestInfo values to override in $_SERVER.
+     */
+    function run_with_request_data($fn, $requestInfo)
+    {
+        $oldServer = $_SERVER;
+
+        // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
+        $_SERVER['SCRIPT_NAME'] = '/index.php';
+
+        // Default SERVER_PROTOCOL method to HTTP/1.1
+        $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+
+        $_SERVER = array_merge($_SERVER, $requestInfo);
+
+        try {
+            $fn();
+            // Restore previous $_SERVER
+            $_SERVER = $oldServer;
+        } catch (\Exception $e) {
+            // Restore previous $_SERVER
+            // The finally block is not supported by PHP 5.4.
+            $_SERVER = $oldServer;
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Helper to simulate running a router on a request.
+     *
+     * @param \Bramus\Router\Router $router
+     * @param string $uri
+     * @param string $requestMethod
+     * @param callable|null $extraMiddleware Extra middleware to pass to router’s run method.
+     * @param array<string, string> $requestInfo values to override in $_SERVER.
+     * @param callable(string): void $test Test function taking response body.
+     */
+    function run_request_full(\Bramus\Router\Router $router, $requestMethod, $uri, $requestInfo, $extraMiddleware, $test)
+    {
+        $requestInfo['REQUEST_URI'] = $uri;
+        $requestInfo['REQUEST_METHOD'] = $requestMethod;
+
+        run_with_request_data(function () use ($router, $extraMiddleware, $test) {
+            ob_start();
+            if ($extraMiddleware === null) {
+                $router->run();
+            } else {
+                $router->run($extraMiddleware);
+            }
+            $responseBody = ob_get_contents();
+            ob_end_clean();
+
+            $test($responseBody);
+        }, $requestInfo);
+    }
+
+    function run_request(\Bramus\Router\Router $router, $requestMethod, $uri, $test)
+    {
+        run_request_full($router, $requestMethod, $uri, [], null, $test);
+    }
+
     class Handler
     {
         public function notfound()
@@ -12,23 +76,6 @@ namespace {
 
     class RouterTest extends PHPUnit_Framework_TestCase
     {
-        protected function setUp()
-        {
-            // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
-            $_SERVER['SCRIPT_NAME'] = '/index.php';
-
-            // Default request method to GET
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-
-            // Default SERVER_PROTOCOL method to HTTP/1.1
-            $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
-        }
-
-        protected function tearDown()
-        {
-            // nothing
-        }
-
         public function testInit()
         {
             $this->assertInstanceOf('\Bramus\Router\Router', new \Bramus\Router\Router());
@@ -43,20 +90,22 @@ namespace {
             });
 
             // Fake some data
-            $_SERVER['SCRIPT_NAME'] = '/sub/folder/index.php';
-            $_SERVER['REQUEST_URI'] = '/sub/folder/about/whatever';
+            run_with_request_data(function () {
+                $method = new ReflectionMethod(
+                    '\Bramus\Router\Router',
+                    'getCurrentUri'
+                );
 
-            $method = new ReflectionMethod(
-                '\Bramus\Router\Router',
-                'getCurrentUri'
-            );
+                $method->setAccessible(true);
 
-            $method->setAccessible(true);
-
-            $this->assertEquals(
-                '/about/whatever',
-                $method->invoke(new \Bramus\Router\Router())
-            );
+                $this->assertEquals(
+                    '/about/whatever',
+                    $method->invoke(new \Bramus\Router\Router())
+                );
+            }, [
+                'SCRIPT_NAME' => '/sub/folder/index.php',
+                'REQUEST_URI' => '/sub/folder/about/whatever',
+            ]);
         }
 
         public function testBasePathOverride()
@@ -68,24 +117,24 @@ namespace {
             });
 
             // Fake some data
-            $_SERVER['SCRIPT_NAME'] = '/public/index.php';
-            $_SERVER['REQUEST_URI'] = '/about';
+            $requestInfo = [
+                'SCRIPT_NAME' => '/public/index.php',
+                'REQUEST_URI' => '/about',
+            ];
 
-            $router->setBasePath('/');
+            run_with_request_data(function () use ($router) {
+                $router->setBasePath('/');
 
-            $this->assertEquals(
-                '/',
-                $router->getBasePath()
-            );
+                $this->assertEquals(
+                    '/',
+                    $router->getBasePath()
+                );
+            }, $requestInfo);
 
             // Test the /about route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/about';
-            $router->run();
-            $this->assertEquals('about', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request_full($router, 'GET', '/about', $requestInfo, null, function ($responseBody) {
+                $this->assertEquals('about', $responseBody);
+            });
         }
 
         public function testBasePathThatContainsEmoji()
@@ -97,16 +146,12 @@ namespace {
             });
 
             // Fake some data
-            $_SERVER['SCRIPT_NAME'] = '/sub/folder/💩/index.php';
-            $_SERVER['REQUEST_URI'] = '/sub/folder/%F0%9F%92%A9/about';
+            $requestInfo = ['SCRIPT_NAME' => '/sub/folder/💩/index.php'];
 
             // Test the /hello/bramus route
-            ob_start();
-            $router->run();
-            $this->assertEquals('about', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request_full($router, 'GET', '/sub/folder/%F0%9F%92%A9/about', $requestInfo, null, function ($responseBody) {
+                $this->assertEquals('about', $responseBody);
+            });
         }
 
         public function testStaticRoute()
@@ -118,13 +163,9 @@ namespace {
             });
 
             // Test the /about route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/about';
-            $router->run();
-            $this->assertEquals('about', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/about', function ($responseBody) {
+                $this->assertEquals('about', $responseBody);
+            });
         }
 
         public function testStaticRouteUsingShorthand()
@@ -136,13 +177,9 @@ namespace {
             });
 
             // Test the /about route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/about';
-            $router->run();
-            $this->assertEquals('about', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/about', function ($responseBody) {
+                $this->assertEquals('about', $responseBody);
+            });
         }
 
         public function testRequestMethods()
@@ -169,49 +206,39 @@ namespace {
             });
 
             // Test GET
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run();
-            $this->assertEquals('get', ob_get_contents());
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('get', $responseBody);
+            });
 
             // Test POST
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'POST';
-            $router->run();
-            $this->assertEquals('post', ob_get_contents());
+            run_request($router, 'POST', '/', function ($responseBody) {
+                $this->assertEquals('post', $responseBody);
+            });
 
             // Test PUT
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'PUT';
-            $router->run();
-            $this->assertEquals('put', ob_get_contents());
+            run_request($router, 'PUT', '/', function ($responseBody) {
+                $this->assertEquals('put', $responseBody);
+            });
 
             // Test PATCH
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'PATCH';
-            $router->run();
-            $this->assertEquals('patch', ob_get_contents());
+            run_request($router, 'PATCH', '/', function ($responseBody) {
+                $this->assertEquals('patch', $responseBody);
+            });
 
             // Test DELETE
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'DELETE';
-            $router->run();
-            $this->assertEquals('delete', ob_get_contents());
+            run_request($router, 'DELETE', '/', function ($responseBody) {
+                $this->assertEquals('delete', $responseBody);
+            });
 
             // Test OPTIONS
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
-            $router->run();
-            $this->assertEquals('options', ob_get_contents());
+            run_request($router, 'OPTIONS', '/', function ($responseBody) {
+                $this->assertEquals('options', $responseBody);
+            });
 
             // Test HEAD
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'HEAD';
-            $router->run();
-            $this->assertEquals('', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'HEAD', '/', function ($responseBody) {
+                $this->assertEquals('', $responseBody);
+            });
         }
 
         public function testShorthandAll()
@@ -222,52 +249,40 @@ namespace {
                 echo 'all';
             });
 
-            $_SERVER['REQUEST_URI'] = '/';
-
             // Test GET
-            ob_start();
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-            $router->run();
-            $this->assertEquals('all', ob_get_contents());
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('all', $responseBody);
+            });
 
             // Test POST
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'POST';
-            $router->run();
-            $this->assertEquals('all', ob_get_contents());
+            run_request($router, 'POST', '/', function ($responseBody) {
+                $this->assertEquals('all', $responseBody);
+            });
 
             // Test PUT
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'PUT';
-            $router->run();
-            $this->assertEquals('all', ob_get_contents());
+            run_request($router, 'PUT', '/', function ($responseBody) {
+                $this->assertEquals('all', $responseBody);
+            });
 
             // Test DELETE
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'DELETE';
-            $router->run();
-            $this->assertEquals('all', ob_get_contents());
+            run_request($router, 'DELETE', '/', function ($responseBody) {
+                $this->assertEquals('all', $responseBody);
+            });
 
             // Test OPTIONS
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
-            $router->run();
-            $this->assertEquals('all', ob_get_contents());
+            run_request($router, 'OPTIONS', '/', function ($responseBody) {
+                $this->assertEquals('all', $responseBody);
+            });
 
             // Test PATCH
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'PATCH';
-            $router->run();
-            $this->assertEquals('all', ob_get_contents());
+            run_request($router, 'PATCH', '/', function ($responseBody) {
+                $this->assertEquals('all', $responseBody);
+            });
 
             // Test HEAD
-            ob_clean();
-            $_SERVER['REQUEST_METHOD'] = 'HEAD';
-            $router->run();
-            $this->assertEquals('', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'HEAD', '/', function ($responseBody) {
+                $this->assertEquals('', $responseBody);
+            });
         }
 
         public function testDynamicRoute()
@@ -279,13 +294,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus';
-            $router->run();
-            $this->assertEquals('Hello bramus', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus', function ($responseBody) {
+                $this->assertEquals('Hello bramus', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithMultiple()
@@ -297,13 +308,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
-            $router->run();
-            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/sumarb', function ($responseBody) {
+                $this->assertEquals('Hello bramus sumarb', $responseBody);
+            });
         }
 
         public function testCurlyBracesRoutes()
@@ -315,13 +322,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
-            $router->run();
-            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/sumarb', function ($responseBody) {
+                $this->assertEquals('Hello bramus sumarb', $responseBody);
+            });
         }
 
         public function testCurlyBracesRoutesWithNonAZCharsInPlaceholderNames()
@@ -333,13 +336,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
-            $router->run();
-            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/sumarb', function ($responseBody) {
+                $this->assertEquals('Hello bramus sumarb', $responseBody);
+            });
         }
 
         public function testCurlyBracesRoutesWithCyrillicCharactersInPlaceholderNames()
@@ -351,13 +350,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
-            $router->run();
-            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/sumarb', function ($responseBody) {
+                $this->assertEquals('Hello bramus sumarb', $responseBody);
+            });
         }
 
         public function testCurlyBracesRoutesWithEmojiInPlaceholderNames()
@@ -369,13 +364,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
-            $router->run();
-            $this->assertEquals('Hello bramus sumarb', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/sumarb', function ($responseBody) {
+                $this->assertEquals('Hello bramus sumarb', $responseBody);
+            });
         }
 
         public function testCurlyBracesWithCyrillicCharacters()
@@ -387,13 +378,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/bg/това';
-            $router->run();
-            $this->assertEquals('BG: това', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/bg/това', function ($responseBody) {
+                $this->assertEquals('BG: това', $responseBody);
+            });
         }
 
         public function testCurlyBracesWithMultipleCyrillicCharacters()
@@ -405,13 +392,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/bg/това/слъг';
-            $router->run();
-            $this->assertEquals('BG: това - слъг', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/bg/това/слъг', function ($responseBody) {
+                $this->assertEquals('BG: това - слъг', $responseBody);
+            });
         }
 
         public function testCurlyBracesWithEmoji()
@@ -423,13 +406,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/emoji/%F0%9F%92%A9'; // 💩
-            $router->run();
-            $this->assertEquals('Emoji: 💩', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/emoji/' . urlencode('💩'), function ($responseBody) {
+                $this->assertEquals('Emoji: 💩', $responseBody);
+            });
         }
 
         public function testCurlyBracesWithEmojiCombinedWithBasePathThatContainsEmoji()
@@ -441,16 +420,11 @@ namespace {
             });
 
             // Fake some data
-            $_SERVER['SCRIPT_NAME'] = '/sub/folder/💩/index.php';
-            $_SERVER['REQUEST_URI'] = '/sub/folder/%F0%9F%92%A9/emoji/%F0%9F%A4%AF'; // 🤯
+            $requestInfo = ['SCRIPT_NAME' => '/sub/folder/💩/index.php'];
 
-            // Test the /hello/bramus route
-            ob_start();
-            $router->run();
-            $this->assertEquals('Emoji: 🤯', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request_full($router, 'GET', '/sub/folder/' . urlencode('💩') . '/emoji/' . urlencode('🤯'), $requestInfo, null, function ($responseBody) {
+                $this->assertEquals('Emoji: 🤯', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithOptionalSubpatterns()
@@ -462,19 +436,14 @@ namespace {
             });
 
             // Test the /hello route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello';
-            $router->run();
-            $this->assertEquals('Hello stranger', ob_get_contents());
+            run_request($router, 'GET', '/hello', function ($responseBody) {
+                $this->assertEquals('Hello stranger', $responseBody);
+            });
 
             // Test the /hello/bramus route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus';
-            $router->run();
-            $this->assertEquals('Hello bramus', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus', function ($responseBody) {
+                $this->assertEquals('Hello bramus', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithMultipleSubpatterns()
@@ -486,13 +455,9 @@ namespace {
             });
 
             // Test the /hello/bramus/page3 route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/page3';
-            $router->run();
-            $this->assertEquals('Hello hello/bramus page : 3', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/page3', function ($responseBody) {
+                $this->assertEquals('Hello hello/bramus page : 3', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithOptionalNestedSubpatterns()
@@ -524,37 +489,29 @@ namespace {
             });
 
             // Test the /blog route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/blog';
-            $router->run();
-            $this->assertEquals('Blog overview', ob_get_contents());
+            run_request($router, 'GET', '/blog', function ($responseBody) {
+                $this->assertEquals('Blog overview', $responseBody);
+            });
 
             // Test the /blog/year route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/blog/1983';
-            $router->run();
-            $this->assertEquals('Blog year overview (1983)', ob_get_contents());
+            run_request($router, 'GET', '/blog/1983', function ($responseBody) {
+                $this->assertEquals('Blog year overview (1983)', $responseBody);
+            });
 
             // Test the /blog/year/month route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/blog/1983/12';
-            $router->run();
-            $this->assertEquals('Blog month overview (1983-12)', ob_get_contents());
+            run_request($router, 'GET', '/blog/1983/12', function ($responseBody) {
+                $this->assertEquals('Blog month overview (1983-12)', $responseBody);
+            });
 
             // Test the /blog/year/month/day route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/blog/1983/12/26';
-            $router->run();
-            $this->assertEquals('Blog day overview (1983-12-26)', ob_get_contents());
+            run_request($router, 'GET', '/blog/1983/12/26', function ($responseBody) {
+                $this->assertEquals('Blog day overview (1983-12-26)', $responseBody);
+            });
 
             // Test the /blog/year/month/day/slug route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/blog/1983/12/26/bramus';
-            $router->run();
-            $this->assertEquals('Blogpost bramus detail (1983-12-26)', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/blog/1983/12/26/bramus', function ($responseBody) {
+                $this->assertEquals('Blogpost bramus detail (1983-12-26)', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithNestedOptionalSubpatterns()
@@ -566,19 +523,14 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus';
-            $router->run();
-            $this->assertEquals('Hello bramus stranger', ob_get_contents());
+            run_request($router, 'GET', '/hello/bramus', function ($responseBody) {
+                $this->assertEquals('Hello bramus stranger', $responseBody);
+            });
 
             // Test the /hello/bramus/bramus route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/bramus';
-            $router->run();
-            $this->assertEquals('Hello bramus bramus', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/bramus', function ($responseBody) {
+                $this->assertEquals('Hello bramus bramus', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithWildcard()
@@ -590,13 +542,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus';
-            $router->run();
-            $this->assertEquals('Hello hello/bramus', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus', function ($responseBody) {
+                $this->assertEquals('Hello hello/bramus', $responseBody);
+            });
         }
 
         public function testDynamicRouteWithPartialWildcard()
@@ -608,13 +556,9 @@ namespace {
             });
 
             // Test the /hello/bramus route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/hello/bramus/sumarb';
-            $router->run();
-            $this->assertEquals('Hello bramus/sumarb', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/hello/bramus/sumarb', function ($responseBody) {
+                $this->assertEquals('Hello bramus/sumarb', $responseBody);
+            });
         }
 
         public function test404()
@@ -632,26 +576,20 @@ namespace {
                 echo 'api route not found';
             });
 
-            // Test the /hello route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run();
-            $this->assertEquals('home', ob_get_contents());
+            // Test existing route
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('home', $responseBody);
+            });
 
-            // Test the /hello/bramus route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/foo';
-            $router->run();
-            $this->assertEquals('route not found', ob_get_contents());
+            // Test non-existing route
+            run_request($router, 'GET', '/foo', function ($responseBody) {
+                $this->assertEquals('route not found', $responseBody);
+            });
 
             // Test the custom api 404
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/api/getUser';
-            $router->run();
-            $this->assertEquals('api route not found', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'POST', '/api/getUser', function ($responseBody) {
+                $this->assertEquals('api route not found', $responseBody);
+            });
         }
 
         public function test404WithClassAtMethod()
@@ -665,19 +603,14 @@ namespace {
             $router->set404('Handler@notFound');
 
             // Test the /hello route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run();
-            $this->assertEquals('home', ob_get_contents());
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('home', $responseBody);
+            });
 
             // Test the /hello/bramus route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/foo';
-            $router->run();
-            $this->assertEquals('route not found', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/foo', function ($responseBody) {
+                $this->assertEquals('route not found', $responseBody);
+            });
         }
 
         public function test404WithClassAtStaticMethod()
@@ -691,26 +624,21 @@ namespace {
             $router->set404('Handler@notFound');
 
             // Test the /hello route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run();
-            $this->assertEquals('home', ob_get_contents());
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('home', $responseBody);
+            });
 
             // Test the /hello/bramus route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/foo';
-            $router->run();
-            $this->assertEquals('route not found', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/foo', function ($responseBody) {
+                $this->assertEquals('route not found', $responseBody);
+            });
         }
 
         public function test404WithManualTrigger()
         {
             // Create Router
             $router = new \Bramus\Router\Router();
-            $router->get('/', function() use ($router) {
+            $router->get('/', function () use ($router) {
                 $router->trigger404();
             });
             $router->set404(function () {
@@ -718,13 +646,9 @@ namespace {
             });
 
             // Test the / route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run();
-            $this->assertEquals('route not found', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('route not found', $responseBody);
+            });
         }
 
         public function testBeforeRouterMiddleware()
@@ -748,32 +672,24 @@ namespace {
             });
 
             // Test the / route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run();
-            $this->assertEquals('before root', ob_get_contents());
+            run_request($router, 'GET', '/', function ($responseBody) {
+                $this->assertEquals('before root', $responseBody);
+            });
 
             // Test the /about route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/about';
-            $router->run();
-            $this->assertEquals('before about', ob_get_contents());
+            run_request($router, 'GET', '/about', function ($responseBody) {
+                $this->assertEquals('before about', $responseBody);
+            });
 
             // Test the /contact route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/contact';
-            $router->run();
-            $this->assertEquals('before contact', ob_get_contents());
+            run_request($router, 'GET', '/contact', function ($responseBody) {
+                $this->assertEquals('before contact', $responseBody);
+            });
 
             // Test the /post route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/post';
-            $_SERVER['REQUEST_METHOD'] = 'POST';
-            $router->run();
-            $this->assertEquals('before post', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'POST', '/post', function ($responseBody) {
+                $this->assertEquals('before post', $responseBody);
+            });
         }
 
         public function testAfterRouterMiddleware()
@@ -784,16 +700,14 @@ namespace {
                 echo 'home';
             });
 
-            // Test the / route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/';
-            $router->run(function () {
+            $extraMiddleware = function () {
                 echo 'finished';
-            });
-            $this->assertEquals('homefinished', ob_get_contents());
+            };
 
-            // Cleanup
-            ob_end_clean();
+            // Test the / route
+            run_request_full($router, 'GET', '/', [], $extraMiddleware, function ($responseBody) {
+                $this->assertEquals('homefinished', $responseBody);
+            });
         }
 
         public function testBasicController()
@@ -802,14 +716,9 @@ namespace {
 
             $router->get('/show/(.*)', 'RouterTestController@show');
 
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/show/foo';
-            $router->run();
-
-            $this->assertEquals('foo', ob_get_contents());
-
-            // cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/show/foo', function ($responseBody) {
+                $this->assertEquals('foo', $responseBody);
+            });
         }
 
         public function testDefaultNamespace()
@@ -820,14 +729,9 @@ namespace {
 
             $router->get('/show/(.*)', 'HelloRouterTestController@show');
 
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/show/foo';
-            $router->run();
-
-            $this->assertEquals('foo', ob_get_contents());
-
-            // cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/show/foo', function ($responseBody) {
+                $this->assertEquals('foo', $responseBody);
+            });
         }
 
         public function testSubfolders()
@@ -839,14 +743,10 @@ namespace {
             });
 
             // Test the / route in a fake subfolder
-            ob_start();
-            $_SERVER['SCRIPT_NAME'] = '/about/index.php';
-            $_SERVER['REQUEST_URI'] = '/about/';
-            $router->run();
-            $this->assertEquals('home', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            $requestInfo = ['SCRIPT_NAME' => '/about/index.php'];
+            run_request_full($router, 'GET', '/about/', $requestInfo, null, function ($responseBody) {
+                $this->assertEquals('home', $responseBody);
+            });
         }
 
         public function testSubrouteMouting()
@@ -863,38 +763,37 @@ namespace {
             });
 
             // Test the /movies route
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/movies';
-            $router->run();
-            $this->assertEquals('overview', ob_get_contents());
+            run_request($router, 'GET', '/movies', function ($responseBody) {
+                $this->assertEquals('overview', $responseBody);
+            });
 
             // Test the /hello/bramus route
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/movies/1';
-            $router->run();
-            $this->assertEquals('1', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/movies/1', function ($responseBody) {
+                $this->assertEquals('1', $responseBody);
+            });
         }
 
         public function testHttpMethodOverride()
         {
-            // Fake the request method to being POST and override it
-            $_SERVER['REQUEST_METHOD'] = 'POST';
-            $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] = 'PUT';
+            $requestInfo = [
+                'REQUEST_METHOD' => 'POST',
+                'HTTP_X_HTTP_METHOD_OVERRIDE' => 'PUT',
+            ];
+            run_with_request_data(function () {
+                // Fake the request method to being POST and override it
 
-            $method = new ReflectionMethod(
-                '\Bramus\Router\Router',
-                'getRequestMethod'
-            );
+                $method = new ReflectionMethod(
+                    '\Bramus\Router\Router',
+                    'getRequestMethod'
+                );
 
-            $method->setAccessible(true);
+                $method->setAccessible(true);
 
-            $this->assertEquals(
-                'PUT',
-                $method->invoke(new \Bramus\Router\Router())
-            );
+                $this->assertEquals(
+                    'PUT',
+                    $method->invoke(new \Bramus\Router\Router())
+                );
+            }, $requestInfo);
         }
 
         public function testControllerMethodReturningFalse()
@@ -905,19 +804,14 @@ namespace {
             $router->get('/static-false', 'RouterTestController@staticReturnFalse');
 
             // Test returnFalse
-            ob_start();
-            $_SERVER['REQUEST_URI'] = '/false';
-            $router->run();
-            $this->assertEquals('returnFalse', ob_get_contents());
+            run_request($router, 'GET', '/false', function ($responseBody) {
+                $this->assertEquals('returnFalse', $responseBody);
+            });
 
             // Test staticReturnFalse
-            ob_clean();
-            $_SERVER['REQUEST_URI'] = '/static-false';
-            $router->run();
-            $this->assertEquals('staticReturnFalse', ob_get_contents());
-
-            // Cleanup
-            ob_end_clean();
+            run_request($router, 'GET', '/static-false', function ($responseBody) {
+                $this->assertEquals('staticReturnFalse', $responseBody);
+            });
         }
     }
 }
