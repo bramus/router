@@ -280,11 +280,15 @@ $router->get('/cars/(\d+)', 'Car@showProfile');
 
 ### Custom 404
 
-The default 404 handler sets a 404 status code and exits. You can override this default 404 handler by using `$router->set404(callable);`
+The default 404 handler sets a 404 or 405 status code and exits. You can override this default 404 handler by using `$router->set404(callable);`
 
 ```php
-$router->set404(function() {
-    header('HTTP/1.1 404 Not Found');
+$router->set404(function($handledByOtherMethod) {
+    if ($handledByOtherMethod) {
+        header('HTTP/1.1 405 Method Not Allowed');
+    } else {
+        header('HTTP/1.1 404 Not Found');
+    }
     // ... do something special here
 });
 ```

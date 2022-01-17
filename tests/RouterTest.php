@@ -626,8 +626,8 @@ namespace {
             $router->get('/', function () {
                 echo 'home';
             });
-            $router->set404(function () {
-                echo 'route not found';
+            $router->set404(function ($handledByOtherMethod) {
+                echo $handledByOtherMethod ? 'method not allowed' : 'route not found';
             });
 
             $router->set404('/api(/.*)?', function () {
@@ -639,8 +639,18 @@ namespace {
                 $this->assertEquals('home', $responseBody);
             });
 
+            // Test route existing for other method
+            run_request($router, 'POST', '/', function ($responseBody) {
+                $this->assertEquals('method not allowed', $responseBody);
+            });
+
             // Test non-existing route
             run_request($router, 'GET', '/foo', function ($responseBody) {
+                $this->assertEquals('route not found', $responseBody);
+            });
+
+            // Test non-existing route
+            run_request($router, 'POST', '/foo', function ($responseBody) {
                 $this->assertEquals('route not found', $responseBody);
             });
 

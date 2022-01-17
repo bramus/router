@@ -85,10 +85,10 @@ class Router
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         $handledMethods = is_array($methods) ? $methods : explode('|', $methods);
-        foreach ($handledMethods as $method) {
+        foreach (self::ALL_METHODS as $method) {
             $this->afterRoutes[$method][] = array(
                 'pattern' => $pattern,
-                'fn' => $fn,
+                'fn' => in_array($method, $handledMethods, true) ? $fn : null,
             );
         }
     }
@@ -289,13 +289,16 @@ class Router
 
         // Handle all routes
         $numHandled = 0;
+        $numHandledByOtherMethods = 0;
         if (isset($this->afterRoutes[$this->requestedMethod])) {
-            $numHandled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+            $handled = $this->handle($this->afterRoutes[$this->requestedMethod], true);
+            $numHandled = $handled->numHandled;
+            $numHandledByOtherMethods = $handled->numHandledByOtherMethods;
         }
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            $this->trigger404();
+            $this->trigger404($numHandledByOtherMethods > 0);
         } // If a route was handled, perform the finish callback (if any)
         else {
             if ($callback && is_callable($callback)) {
@@ -329,8 +332,10 @@ class Router
 
     /**
      * Triggers 404 response
+     *
+     * @param bool $handledByOtherMethod Whether the match is handled by other method.
      */
-    public function trigger404(){
+    public function trigger404($handledByOtherMethod = false){
 
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
@@ -366,16 +371,20 @@ class Router
                   return isset($match[0][0]) && $match[0][1] != -1 ? trim($match[0][0], '/') : null;
                 }, $matches, array_keys($matches));
 
-                $this->invoke($route_callable);
+                $this->invoke($route_callable, [$handledByOtherMethod]);
 
                 ++$numHandled;
               }
             }
         }
         if (($numHandled == 0) && (isset($this->notFoundCallback['/']))) {
-            $this->invoke($this->notFoundCallback['/']);
+            $this->invoke($this->notFoundCallback['/'], [$handledByOtherMethod]);
         } elseif ($numHandled == 0) {
-            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            if ($handledByOtherMethod) {
+                header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
+            } else {
+                header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            }
         }
     }
 
@@ -411,6 +420,7 @@ class Router
     {
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
+        $numHandledByOtherMethods = 0;
 
         // The current page URL
         $uri = $this->getCurrentUri();
@@ -423,6 +433,11 @@ class Router
 
             // is there a valid match?
             if ($is_match) {
+                if ($route['fn'] === null) {
+                    ++$numHandledByOtherMethods;
+
+                    continue;
+                }
 
                 // Rework matches to only contain the matches, not the orig string
                 $matches = array_slice($matches, 1);
@@ -453,7 +468,10 @@ class Router
         }
 
         // Return the number of routes handled
-        return $numHandled;
+        return (object) [
+            'numHandled' => $numHandled,
+            'numHandledByOtherMethods' => $numHandledByOtherMethods,
+        ];
     }
 
     private function invoke($fn, $params = array())
