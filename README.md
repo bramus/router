@@ -341,6 +341,12 @@ $router->before('GET|POST', '/admin/.*', function() {
 });
 ```
 
+You can use this shorthand for a before route that can be accessed using any method:
+
+```php
+$router->beforeAll('/admin/.*', function() { … });
+```
+
 Unlike route handling functions, more than one before route middleware is executed when more than one route match is found.
 
 
