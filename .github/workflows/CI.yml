@@ -23,7 +23,7 @@ jobs:
           tools: composer:2.2
       - name: Install dependencies
         run: composer update --no-interaction --prefer-dist ${{ matrix.dependencies }}
-      - name: Configure PHPUnit problem matchers
-        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      # - name: Configure PHPUnit problem matchers
+      #   run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
       - name: Run tests
         run: ./vendor/bin/phpunit
