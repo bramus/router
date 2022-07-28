@@ -291,10 +291,8 @@ class Router
         if ($numHandled === 0 && isset($this->afterRoutes[$this->requestedMethod])) {
             $this->trigger404($this->afterRoutes[$this->requestedMethod]);
         } // If a route was handled, perform the finish callback (if any)
-        else {
-            if ($callback && is_callable($callback)) {
-                $callback();
-            }
+        elseif ($callback && is_callable($callback)) {
+            $callback();
         }
 
         // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
