@@ -16,13 +16,14 @@ jobs:
         dependencies: ['', '--prefer-lowest --prefer-stable']
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
-      - uses: shivammathur/setup-php@2.9.0
+        uses: actions/checkout@v2
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2
       - name: Install dependencies
         run: composer update --no-interaction --prefer-dist ${{ matrix.dependencies }}
-      - name: Configure PHPUnit problem matchers
-        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      # - name: Configure PHPUnit problem matchers
+      #   run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
       - name: Run tests
         run: ./vendor/bin/phpunit
