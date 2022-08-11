@@ -2,11 +2,25 @@
 
 namespace {
 
-    class Handler
+    class Handler {
+        public function notFound() {
+            echo "route not found";
+        }
+    }
+
+    abstract class AbstractTestController {
+        public abstract function doSomething1();
+    }
+    
+    class TestController extends AbstractTestController
     {
-        public function notfound()
+        public function doSomething1()
         {
-            echo 'route not found';
+            echo 'called';
+        }
+
+        private function doSomething2() {
+            echo 'called';
         }
     }
 
@@ -125,6 +139,45 @@ namespace {
 
             // Cleanup
             ob_end_clean();
+        }
+
+        private function invokeRoute($classRoute) {
+            // Create Router
+            $router = new \Bramus\Router\Router();
+
+            $router->get('/invokeMe', $classRoute);
+
+            $_SERVER['REQUEST_URI'] = '/invokeMe';
+            $router->run();
+        }
+
+         /**
+         * @expectedException \Bramus\Router\InvalidControllerException
+         */
+        public function testControllerClassExists()
+        {
+            $this->invokeRoute('NotExistingClass@doSomething1');
+        }
+
+         /**
+         * @expectedException \Bramus\Router\InvalidControllerException
+         */
+        public function testControllerMethodNonAbstract()
+        {
+            $this->invokeRoute('AbstractTestController@doSomething1');
+        }
+
+         /**
+         * @expectedException \Bramus\Router\InvalidControllerException
+         */
+        public function testControllerMethodPublic()
+        {
+            $this->invokeRoute('AbstractTestController@doSomething2');
+        }
+
+        public function testControllerMethodInvokable()
+        {
+            $this->invokeRoute('TestController@doSomething1');
         }
 
         public function testStaticRouteUsingShorthand()
