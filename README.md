@@ -343,6 +343,16 @@ $router->before('GET|POST', '/admin/.*', function() {
 
 Unlike route handling functions, more than one before route middleware is executed when more than one route match is found.
 
+If you want to run the same middleware for different routes you could try this
+```php
+$router->before('GET|POST', ['/admins/.*', '/helpers/.*'], function() {
+    $token = Request::get()->Header('Authorization');
+    if (!Auth::validate($token)) {
+        header('location: /error/forbidden');
+        exit;
+    }
+});
+```
 
 ### Before Router Middlewares
 
