@@ -185,62 +185,64 @@ class Router
         $this->baseRoute = $curBaseRoute;
     }
 
-    /**
-     * Get all request headers.
-     *
-     * @return array The request headers
-     */
-    public function getRequestHeaders()
-    {
-        $headers = array();
+	/**
+	 * Get all request headers.
+	 *
+	 * @return array The request headers
+	 */
+	public function getRequestHeaders()
+	{
+		function formatHeadersName(&$headers, $removeFirstChars = false)
+		{
 
-        // If getallheaders() is available, use that
-        if (function_exists('getallheaders')) {
-            $headers = getallheaders();
+			foreach ($headers as $name => $value) {
 
-            // getallheaders() can return false if something went wrong
-            if ($headers !== false) {
-                return $headers;
-            }
-        }
+				if ((substr($name, 0, 5) == 'HTTP_') || (substr($name, 0, 5) == 'X-Htt') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
+					$headers[str_replace([' ', 'Http'], ['-', 'HTTP'], ucwords(strtolower(str_replace(['_', '-'], ' ', ($removeFirstChars ? substr($name, 5) : $name) ))))] = $value;
+				}
+			}
+			return $headers;
+		}
 
-        // Method getallheaders() not available or went wrong: manually extract 'm
-        foreach ($_SERVER as $name => $value) {
-            if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
-                $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
-            }
-        }
+		// If getallheaders() is available, use that
+		if (function_exists('getallheaders')) {
+			$headers = formatHeadersName(getallheaders(), false);
+			// getallheaders() can return false if something went wrong
+			if ($headers !== FALSE) {
+				return $headers;
+			}
+		} else {
+			// Method getallheaders() not available or went wrong: manually extract 'm
+			$headers = formatHeadersName($_SERVER, true);
+		}
+		return $headers;
+	}
 
-        return $headers;
-    }
+	/**
+	 * Get the request method used, taking overrides into account.
+	 *
+	 * @return string The Request method to handle
+	 */
+	public function getRequestMethod()
+	{
+		// Take the method as found in $_SERVER
+		$method = $_SERVER['REQUEST_METHOD'];
 
-    /**
-     * Get the request method used, taking overrides into account.
-     *
-     * @return string The Request method to handle
-     */
-    public function getRequestMethod()
-    {
-        // Take the method as found in $_SERVER
-        $method = $_SERVER['REQUEST_METHOD'];
+		// If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
+		// @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
+		if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
+			ob_start();
+			$method = 'GET';
+		} // If it's a POST request, check for a method override header
+		elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			$headers = $this->getRequestHeaders();
+			if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
+				$method = $headers['X-HTTP-Method-Override'];
+			}
+		}
 
-        // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
-        // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
-            ob_start();
-            $method = 'GET';
-        }
-
-        // If it's a POST request, check for a method override header
-        elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $headers = $this->getRequestHeaders();
-            if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
-                $method = $headers['X-HTTP-Method-Override'];
-            }
-        }
-
-        return $method;
-    }
+		return $method;
+	}
 
     /**
      * Set a Default Lookup Namespace for Callable methods.
