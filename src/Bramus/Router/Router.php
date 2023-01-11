@@ -192,7 +192,7 @@ class Router
 	 */
 	public function getRequestHeaders()
 	{
-		function formatHeadersName(&$headers, $removeFirstChars = false)
+		function formatHeadersName($headers, $removeFirstChars = false)
 		{
 
 			foreach ($headers as $name => $value) {
