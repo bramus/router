@@ -59,6 +59,10 @@ class Router
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
+        if ($methods === '*') {
+            $methods = 'GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD';
+        }
+        
         foreach (explode('|', $methods) as $method) {
             $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
