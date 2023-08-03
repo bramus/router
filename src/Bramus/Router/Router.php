@@ -7,6 +7,40 @@
  */
 namespace Bramus\Router;
 
+use ReflectionMethod;
+use ReflectionException;
+
+use function array_keys;
+use function array_map;
+use function array_slice;
+use function boolval;
+use function call_user_func;
+use function call_user_func_array;
+use function count;
+use function explode;
+use function forward_static_call_array;
+use function function_exists;
+use function header;
+use function implode;
+use function in_array;
+use function is_callable;
+use function is_null;
+use function is_string;
+use function ob_end_clean;
+use function ob_start;
+use function preg_match_all;
+use function preg_replace;
+use function rawurldecode;
+use function rtrim;
+use function str_replace;
+use function stripos;
+use function strlen;
+use function strstr;
+use function strtolower;
+use function substr;
+use function trim;
+use function ucwords;
+
 /**
  * Class Router.
  */
