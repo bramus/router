@@ -23,6 +23,11 @@ class Router
     private $beforeRoutes = array();
 
     /**
+     * @var array All named routes with their patterns
+     */
+    private $namedRoutes = array();
+
+    /**
      * @var array [object|callable] The function to be executed when no route has been matched
      */
     protected $notFoundCallback = [];
@@ -78,10 +83,14 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function match($methods, $pattern, $fn)
+    public function match($methods, $pattern, $fn, $name=null)
     {
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
+
+        if ($name !== null) {
+            $this->namedRoutes[$name] = $pattern;
+        }
 
         foreach (explode('|', $methods) as $method) {
             $this->afterRoutes[$method][] = array(
@@ -97,9 +106,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function all($pattern, $fn)
+    public function all($pattern, $fn, $name=null)
     {
-        $this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn);
+        $this->match('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn, $name);
     }
 
     /**
@@ -108,9 +117,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function get($pattern, $fn)
+    public function get($pattern, $fn, $name=null)
     {
-        $this->match('GET', $pattern, $fn);
+        $this->match('GET', $pattern, $fn, $name);
     }
 
     /**
@@ -119,9 +128,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function post($pattern, $fn)
+    public function post($pattern, $fn, $name=null)
     {
-        $this->match('POST', $pattern, $fn);
+        $this->match('POST', $pattern, $fn, $name);
     }
 
     /**
@@ -130,9 +139,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function patch($pattern, $fn)
+    public function patch($pattern, $fn, $name=null)
     {
-        $this->match('PATCH', $pattern, $fn);
+        $this->match('PATCH', $pattern, $fn, $name);
     }
 
     /**
@@ -141,9 +150,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function delete($pattern, $fn)
+    public function delete($pattern, $fn, $name=null)
     {
-        $this->match('DELETE', $pattern, $fn);
+        $this->match('DELETE', $pattern, $fn, $name);
     }
 
     /**
@@ -152,9 +161,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function put($pattern, $fn)
+    public function put($pattern, $fn, $name=null)
     {
-        $this->match('PUT', $pattern, $fn);
+        $this->match('PUT', $pattern, $fn, $name);
     }
 
     /**
@@ -163,9 +172,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function options($pattern, $fn)
+    public function options($pattern, $fn, $name=null)
     {
-        $this->match('OPTIONS', $pattern, $fn);
+        $this->match('OPTIONS', $pattern, $fn, $name);
     }
 
     /**
@@ -394,8 +403,13 @@ class Router
     */
     private function patternMatches($pattern, $uri, &$matches, $flags)
     {
-      // Replace all curly braces matches {} into word patterns (like Laravel)
+      // Replace all curly braces matches {} into word patterns (like Laravel).
+      // Therefore mask quantifiers like {m,n} or {n} ... with [[m,n]] or [[n]],
+      // replace curly braces and then unmask quantifiers.
+      $pattern = preg_replace('/\{([0-9,]*)\}/', '[[\\1]]', $pattern);
+      $pattern = preg_replace('/\/{.*?:(.*?)}/', '/(\\1)', $pattern);
       $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
+      $pattern = preg_replace('/\[\[([0-9,]*)\]\]/', '{\\1}', $pattern);
 
       // we may have a match!
       return boolval(preg_match_all('#^' . $pattern . '$#', $uri, $matches, PREG_OFFSET_CAPTURE));
@@ -537,5 +551,51 @@ class Router
     public function setBasePath($serverBasePath)
     {
         $this->serverBasePath = $serverBasePath;
+    }
+
+    public function route($name, $vars=[]) {
+        if (!array_key_exists($name, $this->namedRoutes)) {
+            throw new \InvalidArgumentException(sprintf('Named route %s does not exist!', $name));
+        }
+
+        $route = $this->namedRoutes[$name];
+
+        return $this->generateUri($route, $vars);
+    }
+
+    public function generateUri($route, $vars=[]) {
+        // remove positional, optional placeholders from route uri
+        do {
+            $route = preg_replace('/\([^(]*\)\?/', '', $route, -1, $count);
+        } while ($count > 0);
+
+        // remove all quantifiers b/c of colliding curly braces
+        $route = preg_replace('/\{[0-9,]*\}/', '', $route);
+
+        // replace named variables like /user/{username}
+        $route = preg_replace_callback_array([
+            '/(?|\{([^}:]+?)\}|\{([^:]+):.+?\})/' => function ($match) use ($route, &$vars) {
+                $varname = $match[1];
+    
+                if (array_key_exists($varname, $vars)) {
+                    $value = $vars[$varname];
+                    unset($vars[$varname]);
+    
+                    return $value;
+                }
+    
+                throw new \InvalidArgumentException(
+                    sprintf('Replacement for mandatory variable %s is missing in route %s!', $varname, $route));
+    
+                return "";
+            },
+        ], $route);
+    
+        // build query string from left variables
+        if (!empty($vars)) {
+            $route .= '?' . http_build_query($vars);
+        }
+    
+        return $this->getBasePath() . ltrim($route, '/');
     }
 }
