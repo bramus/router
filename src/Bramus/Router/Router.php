@@ -12,6 +12,8 @@ namespace Bramus\Router;
  */
 class Router
 {
+    
+    private $flag = '';
     /**
      * @var array The route patterns and their handling functions
      */
@@ -46,6 +48,11 @@ class Router
      * @var string Default Controllers Namespace
      */
     private $namespace = '';
+    
+    
+    public function addFlag($flag){
+        $this->flag = trim($flag);
+    }
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
@@ -70,6 +77,8 @@ class Router
             );
         }
     }
+    
+    
 
     /**
      * Store a route and a handling function to be executed when accessed using one of the specified methods.
@@ -398,7 +407,7 @@ class Router
       $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
 
       // we may have a match!
-      return boolval(preg_match_all('#^' . $pattern . '$#', $uri, $matches, PREG_OFFSET_CAPTURE));
+      return boolval(preg_match_all('#^' . $pattern . '$#'.$this->flag, $uri, $matches, PREG_OFFSET_CAPTURE));
     }
 
     /**
