@@ -7,6 +7,8 @@
  */
 namespace Bramus\Router;
 
+class InvalidControllerException extends \Exception {}
+
 /**
  * Class Router.
  */
@@ -474,6 +476,8 @@ class Router
                 $controller = $this->getNamespace() . '\\' . $controller;
             }
 
+            $invalidControllerMsg="controller class '$controller' with method '$method' is not invokable, the class and method should be non-abstract, and the method public";
+
             try {
                 $reflectedMethod = new \ReflectionMethod($controller, $method);
                 // Make sure it's callable
@@ -487,9 +491,11 @@ class Router
                         }
                         call_user_func_array(array($controller, $method), $params);
                     }
+                } else {
+                    throw new InvalidControllerException($invalidControllerMsg,1001);    
                 }
             } catch (\ReflectionException $reflectionException) {
-                // The controller class is not available or the class does not have the method $method
+                throw new InvalidControllerException($invalidControllerMsg,1002);
             }
         }
     }
