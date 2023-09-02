@@ -92,6 +92,17 @@ class Router
     }
 
     /**
+     * Shorthand for a before route accessed using any method.
+     * 
+     * @param string          $pattern A route pattern such as /about/system
+     * @param object|callable $fn      The handling function to be executed 
+     */
+    public function beforeAll($pattern, $fn)
+    {
+        $this->before('GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD', $pattern, $fn);
+    }
+    
+    /**
      * Shorthand for a route accessed using any method.
      *
      * @param string          $pattern A route pattern such as /about/system
