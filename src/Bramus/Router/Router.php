@@ -15,12 +15,12 @@ class Router
     /**
      * @var array The route patterns and their handling functions
      */
-    private $afterRoutes = array();
+    protected $afterRoutes = array();
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
-    private $beforeRoutes = array();
+    protected $beforeRoutes = array();
 
     /**
      * @var array [object|callable] The function to be executed when no route has been matched
@@ -30,22 +30,22 @@ class Router
     /**
      * @var string Current base route, used for (sub)route mounting
      */
-    private $baseRoute = '';
+    protected $baseRoute = '';
 
     /**
      * @var string The Request Method that needs to be handled
      */
-    private $requestedMethod = '';
+    protected $requestedMethod = '';
 
     /**
      * @var string The Server Base Path for Router Execution
      */
-    private $serverBasePath;
+    protected $serverBasePath;
 
     /**
      * @var string Default Controllers Namespace
      */
-    private $namespace = '';
+    protected $namespace = '';
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
@@ -409,7 +409,7 @@ class Router
      *
      * @return int The number of routes handled
      */
-    private function handle($routes, $quitAfterRun = false)
+    protected function handle($routes, $quitAfterRun = false)
     {
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
@@ -458,7 +458,7 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = array())
+    protected function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
