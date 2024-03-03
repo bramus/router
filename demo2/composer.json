@@ -1,0 +1,12 @@
+{
+    "require": {
+        "bramus/router": "~1.6",
+        "symfony/http-foundation": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {"App\\": "src/"},
+        "exclude-from-classmap": ["/Tests/"]
+    },
+    "require-dev": {
+    }
+}
